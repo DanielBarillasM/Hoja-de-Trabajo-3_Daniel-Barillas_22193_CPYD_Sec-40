@@ -1,0 +1,175 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+
+\definecolor{uvgblue}{RGB}{0, 78, 150}
+\definecolor{uvggreen}{RGB}{34, 139, 34}
+\definecolor{cudaGreen}{RGB}{118, 185, 0}
+\definecolor{softgray}{RGB}{245, 247, 249}
+\definecolor{accent}{RGB}{74, 144, 226}
+
+\titleformat{\section}{\color{uvgblue}\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\color{accent}\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+\title{
+    \vspace{1cm}
+    {\color{uvgblue}\Huge\bfseries Hoja de Trabajo 3} \\
+    \vspace{0.4cm}
+    {\color{cudaGreen}\Large\bfseries CUDA, paralelismo de datos y comparación CPU vs GPU}
+}
+\author{
+    {\large Daniel Barillas} \\
+    {\large Carné: 22193} \\
+    {\large Sección: 40} \\
+    {\large Programación Paralela y Distribuida}
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\begin{tcolorbox}[colback=softgray,colframe=uvgblue,title={\textbf{\color{uvgblue}Resumen ejecutivo}}]
+El laboratorio desarrollado en CUDA tuvo como objetivo analizar soluciones paralelas para tareas de cómputo intensivo, comparándolas con una implementación secuencial en CPU. Se abordaron tres actividades clave: suma vectorial, clasificación por umbral y medición de rendimiento.
+\end{tcolorbox}
+
+\section*{\color{uvgblue}Introducción}
+En la programación paralela, la GPU se utiliza para acelerar tareas en las que se pueden ejecutar muchas operaciones simultáneamente. Este documento analiza tres problemas fundamentales: suma de arreglos, clasificación por umbral y comparación de tiempos entre CPU y GPU.
+
+La ejecución de un programa CUDA requiere más que una función kernel. Es necesario gestionar memoria, transferir datos entre host y device y sincronizar procesos para garantizar que el resultado final sea correcto y consistente.
+
+\section*{\color{uvgblue}Objetivos}
+\begin{itemize}[leftmargin=1.5em]
+    \item Comprender la diferencia entre CPU y GPU.
+    \item Implementar una suma de arreglos en paralelo usando CUDA.
+    \item Evaluar el impacto del cambio en el tamaño del grid y del block.
+    \item Analizar la importancia de reservar y liberar memoria correctamente.
+    \item Clasificar valores con respecto a un umbral definido.
+    \item Comparar tiempos de ejecución entre CPU y GPU.
+\end{itemize}
+
+\section*{\color{uvgblue}Parte 1: Suma de arreglos en GPU}
+La suma de vectores es un ejemplo clásico de paralelismo de datos. Cada posición del arreglo de salida puede calcularse de forma independiente, por lo que la GPU puede dividir el trabajo entre millones de hilos.
+
+El kernel principal es:
+
+\begin{lstlisting}[language=C++]
+__global__ void sumarArreglos(const int *A, const int *B, int *C, int N) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (idx < N) {
+        C[idx] = A[idx] + B[idx];
+    }
+}
+\end{lstlisting}
+
+\subsection*{\color{accent}Flujo del programa}
+\begin{enumerate}[leftmargin=1.5em]
+    \item Se declaran los arreglos A y B en el host.
+    \item Se inicializan con valores definidos.
+    \item Se reserva memoria en el device para A, B y C.
+    \item Se copian A y B desde el host al device.
+    \item Se lanza el kernel con una configuración de grid y block.
+    \item Se sincroniza el dispositivo con `cudaDeviceSynchronize()`.
+    \item Se devuelve el resultado del device al host.
+    \item Se imprimen los valores finales.
+\end{enumerate}
+
+\subsection*{\color{accent}Preguntas clave}
+\textbf{1. ¿Qué partes se ejecutan en CPU y en GPU?}
+La parte del host incluye la inicialización y lectura de datos, la reserva y liberación de memoria, las copias con `cudaMemcpy` y la impresión final. La parte del device se ejecuta dentro del kernel, donde cada hilo realiza la suma de un único índice.
+
+\textbf{2. ¿Qué pasa si cambia grid y block?}
+Cambiar estos valores afecta la cantidad total de hilos que ejecutan el programa. Si la configuración es insuficiente, algunos elementos quedan sin procesar. Por ello se usa la validación `if (idx < N)` para evitar accesos fuera de rango.
+
+\textbf{3. ¿Qué pasa si no se reserva memoria?}
+Sin `cudaMalloc`, los punteros del device no apuntan a memoria válida. El kernel puede fallar o producir resultados incorrectos.
+
+\textbf{4. ¿Qué pasa si no se transfiere el resultado al host?}
+El cálculo ocurre en la GPU, pero el host no puede visualizarlo ni usarlo. La transferencia `device -> host` es imprescindible para obtener el resultado final.
+
+\section*{\color{uvgblue}Parte 2: Clasificación por umbral}
+La segunda parte del trabajo consiste en clasificar cada valor de un arreglo con respecto a un umbral. La lógica es la siguiente:
+
+$$
+resultado[i] =
+\begin{cases}
+1, & \text{si } entrada[i] \geq umbral \\
+0, & \text{si } entrada[i] < umbral
+\end{cases}
+$$
+
+El kernel utilizado es:
+
+\begin{lstlisting}[language=C++]
+__global__ void clasificarUmbral(const int *entrada, int *salida, int N, int umbral) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (idx < N) {
+        salida[idx] = (entrada[idx] >= umbral) ? 1 : 0;
+    }
+}
+\end{lstlisting}
+
+Esta estrategia es útil porque cada valor puede evaluarse de forma independiente, utilizando el modelo de paralelismo de datos.
+
+\subsection*{\color{accent}Ejemplo de salida esperada}
+\begin{verbatim}
+Umbral = 50
+in[ 0] =   0  -> out[ 0] = 0
+in[ 1] =   5  -> out[ 1] = 0
+...
+in[ 9] =  45  -> out[ 9] = 0
+in[10] =  50  -> out[10] = 1
+in[11] =  55  -> out[11] = 1
+...
+in[31] = 155  -> out[31] = 1
+Finalizado (host).
+\end{verbatim}
+
+\section*{\color{uvgblue}Parte 3: Versión CPU y medición de tiempos}
+La comparación entre CPU y GPU permite evaluar el rendimiento real de cada plataforma. En la versión CPU, la implementación se hace con un ciclo `for`, mientras que la imagen del problema se procesa en paralelo en forma de GPU.
+
+\begin{lstlisting}[language=C++]
+std::vector<int> sumaCPU(const std::vector<int>& A, const std::vector<int>& B) {
+    std::vector<int> C(A.size());
+
+    for (size_t i = 0; i < A.size(); ++i) {
+        C[i] = A[i] + B[i];
+    }
+
+    return C;
+}
+\end{lstlisting}
+
+La medición del tiempo se realiza con `std::chrono`:
+
+\begin{lstlisting}[language=C++]
+auto inicioCPU = std::chrono::high_resolution_clock::now();
+std::vector<int> C = sumaCPU(A, B);
+auto finCPU = std::chrono::high_resolution_clock::now();
+
+auto duracionCPU = std::chrono::duration_cast<std::chrono::microseconds>(finCPU - inicioCPU).count();
+\end{lstlisting}
+
+\subsection*{\color{accent}Interpretación}
+En problemas grandes, la GPU suele superar a la CPU porque cada hilo realiza una pequeña parte del trabajo al mismo tiempo. Esta diferencia es precisamente la base del cómputo paralelo.
+
+\section*{\color{uvgblue}Conclusiones}
+La programación con CUDA permite resolver problemas de gran escala de una forma mucho más eficiente cuando el cálculo puede dividirse en tareas independientes. La GPU no reemplaza por completo a la CPU, sino que complementa su rendimiento en problemas de naturaleza masivamente paralela.
+
+La correcta transferencia de memoria, la administración del device y la definición de grid/block son pasos esenciales para lograr programas correctos y rápidos. En conjunto, este trabajo demuestra cómo una operación aparentemente simple puede convertirse en un ejercicio completo de diseño paralelo, análisis de rendimiento y validación de resultados.
+
+\end{document}

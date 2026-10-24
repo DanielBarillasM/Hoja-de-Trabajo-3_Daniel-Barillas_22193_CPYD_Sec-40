@@ -1,55 +1,61 @@
-# Prerequisites
-*.d
-
-# Object files
+# --- Compilación / binarios ---
 *.o
-*.ko
 *.obj
-*.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
+*.out
+*.exe
+*.app
+*.bin
 *.so
 *.so.*
 *.dylib
+*.a
+*.lib
+*.dll
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
+# --- Archivos temporales y de depuración ---
+*.d
 *.dSYM/
-*.su
-*.idb
 *.pdb
+*.ilk
+*.map
+*.exp
+*.lst
+*.tmp
+*.log
 
-# Kernel Module Compile Results
+# --- Prefijos y archivos de compilación ---
+*.gch
+*.pch
 *.mod*
 *.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-# debug information files
+*.symvers
+*.order
+*.old
 *.dwo
+
+# --- Carpetas generadas ---
+build/
+bin/
+out/
+results/*.txt
+results/*.log
+
+# --- Archivos del sistema ---
+.DS_Store
+Thumbs.db
+
+# --- Paquetes locales de instalación ---
+cuda-keyring_*.deb
+
+# --- Proyecto específico ---
+source/umbralizar
+source/*.out
+report/*.aux
+report/*.log
+report/*.pdf
+report/*.out
+report/*.toc
+report/*.synctex.gz
+report/*.fdb_latexmk
+report/*.fls
+report/*.xdv
