@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Este archivo debe conservar finales de linea LF para ejecutarse en Bash/WSL.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

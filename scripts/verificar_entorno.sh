@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Este archivo debe conservar finales de linea LF para ejecutarse en Bash/WSL.
 set -u
 
 estado=0

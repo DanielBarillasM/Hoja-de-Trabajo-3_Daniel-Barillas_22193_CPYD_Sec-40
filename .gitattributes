@@ -1,0 +1,12 @@
+# Bash debe conservar LF incluso cuando el repositorio se usa desde Windows.
+*.sh text eol=lf
+
+# Fuentes y documentación de texto.
+*.cu text eol=lf
+*.cpp text eol=lf
+*.md text eol=lf
+*.tex text eol=lf
+
+# Artefactos binarios.
+*.pdf binary
+*.png binary
