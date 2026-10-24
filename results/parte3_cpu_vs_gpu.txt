@@ -1,0 +1,16 @@
+[1m[36m
+=========================================[0m
+[1m[36m=== PARTE 3: VERSION SECUENCIAL EN CPU ===[0m
+[1m[36m=========================================[0m
+[33m[INFO] Generando arreglos de tamaño 1000000 ...[0m
+[1m[35m
+=== Primeros 5 resultados ===[0m
+C[0] = 4
+C[1] = 7
+C[2] = 10
+C[3] = 13
+C[4] = 16
+[32m
+Tiempo CPU: 1496 microsegundos[0m
+[32m✅ La versión CPU fue ejecutada correctamente.[0m
+[32m[VALIDACION] Resultado CPU: CORRECTO[0m

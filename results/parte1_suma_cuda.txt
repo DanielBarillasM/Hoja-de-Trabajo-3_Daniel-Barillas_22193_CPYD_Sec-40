@@ -1,0 +1,66 @@
+[1m[36m
+========================================
+[0m[1m[36m=== PARTE 1: SUMA DE ARREGLOS EN CUDA ===
+[0m[1m[36m========================================
+
+[0m[32m[OK] Memoria reservada correctamente en el device.
+[0m[32m[OK] Datos transferidos del host al device.
+[0m[33m[INFO] Configuración del kernel: grid = 2, block = 8
+[0m[32m[OK] El kernel terminó correctamente.
+[0m[1m[35m
+=== Arreglo A ===
+[0mA[ 0] =   1
+A[ 1] =   2
+A[ 2] =   3
+A[ 3] =   4
+A[ 4] =   5
+A[ 5] =   6
+A[ 6] =   7
+A[ 7] =   8
+A[ 8] =   9
+A[ 9] =  10
+A[10] =  11
+A[11] =  12
+A[12] =  13
+A[13] =  14
+A[14] =  15
+A[15] =  16
+[1m[35m
+=== Arreglo B ===
+[0mB[ 0] =   3
+B[ 1] =   5
+B[ 2] =   7
+B[ 3] =   9
+B[ 4] =  11
+B[ 5] =  13
+B[ 6] =  15
+B[ 7] =  17
+B[ 8] =  19
+B[ 9] =  21
+B[10] =  23
+B[11] =  25
+B[12] =  27
+B[13] =  29
+B[14] =  31
+B[15] =  33
+[1m[32m
+=== Resultado A + B ===
+[0mC[ 0] =   4
+C[ 1] =   7
+C[ 2] =  10
+C[ 3] =  13
+C[ 4] =  16
+C[ 5] =  19
+C[ 6] =  22
+C[ 7] =  25
+C[ 8] =  28
+C[ 9] =  31
+C[10] =  34
+C[11] =  37
+C[12] =  40
+C[13] =  43
+C[14] =  46
+C[15] =  49
+[1m[32m
+✅ Programa finalizado correctamente.
+[0m

@@ -1,0 +1,15 @@
+============================================================
+ PARTE 3: COMPARACION JUSTA CPU VS GPU
+============================================================
+Elementos: 8388608
+Datos por arreglo: 32.00 MiB
+Configuracion CUDA: grid=32768, block=256
+
+GPU: NVIDIA GeForce RTX 4050 Laptop GPU
+Tiempo CPU:              5.106 ms
+Tiempo GPU (solo kernel): 0.662 ms
+Tiempo GPU (H2D+kernel+D2H): 11.359 ms
+Aceleracion solo kernel: 7.72x
+Aceleracion extremo a extremo: 0.45x
+Validacion: CORRECTA (0 discrepancias)
+Primeros resultados: 4, 7, 10, 13, 16
