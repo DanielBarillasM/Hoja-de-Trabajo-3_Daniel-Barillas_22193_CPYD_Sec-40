@@ -1,4 +1,4 @@
-# Hoja de Trabajo 3 · CUDA y paralelismo de datos
+<h1 align="center">Hoja de Trabajo 3 · CUDA y paralelismo de datos</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/CUDA-C%2B%2B-0066FF?style=for-the-badge&logo=nvidia&logoColor=white" alt="CUDA C++" />
@@ -20,15 +20,15 @@
 | Universidad | Universidad del Valle de Guatemala |
 | Curso | Computación Paralela y Distribuida |
 | Docente | Marlon Fuentes |
-| Estudiante | Daniel Barillas |
+| Estudiante | Pablo Daniel Barillas Moreno |
 | Carné | 22193 |
 | Sección | 40 |
-| Semestre indicado | 2, 2025 |
+| Semestre | 2, 2026 |
 | Actividad | Hoja de Trabajo #3 |
 
-El [enunciado original](docs/material_original/Hoja_de_Trabajo_3.pdf) y su
-[transcripción navegable](docs/ENUNCIADO.md) están incluidos para que pueda
-verificarse la relación entre requisitos y entregables.
+El [enunciado original](docs/material_original/Hoja_de_Trabajo_3.pdf) y la
+[plantilla original `vacio.cu`](docs/material_original/vacio_original.cu) se
+conservan en el repositorio como material de referencia.
 
 ## Contenido
 
@@ -39,7 +39,7 @@ verificarse la relación entre requisitos y entregables.
 - [Parte 3: CPU frente a GPU](#parte-3-comparación-cpu-frente-a-gpu)
 - [Ejecución](#compilación-y-ejecución)
 - [Metodología](#metodología-de-medición)
-- [Informe](#informe)
+- [Solución de problemas](#solución-de-problemas)
 
 ## Cumplimiento del enunciado
 
@@ -64,8 +64,6 @@ verificarse la relación entre requisitos y entregables.
 ├── README.md
 ├── LICENSE
 ├── docs/
-│   ├── ENUNCIADO.md
-│   ├── VALIDACION.md
 │   └── material_original/
 │       ├── Hoja_de_Trabajo_3.pdf
 │       └── vacio_original.cu
@@ -82,8 +80,21 @@ verificarse la relación entre requisitos y entregables.
 ├── report/
 │   ├── informe_ht3.tex
 │   └── imagenes/
-├── output/pdf/
+│       ├── Archivo_vacío_Ejecución.png
+│       ├── comparación_parte-3.png
+│       ├── parte-1.png
+│       ├── parte-2.png
+│       ├── parte-3.png
+│       └── verificar_entorno.png
+├── output/
+│   └── pdf/
+│       └── informe_ht3.pdf
 └── results/
+    ├── parte1_suma_cuda.txt
+    ├── parte2_umbral_clasificacion.txt
+    ├── parte3_comparacion_cpu_gpu.txt
+    ├── parte3_cpu_vs_gpu.txt
+    └── vacio.txt
 ```
 
 `build/` se genera localmente y no forma parte de la entrega.
@@ -200,38 +211,120 @@ garantiza acelerar el programa completo cuando la comunicación domina el costo.
 
 ## Compilación y ejecución
 
-### Requisitos
+### 1. Requisitos del sistema
 
-- WSL 2 o Linux;
-- `g++` con C++17;
-- CUDA Toolkit y `nvcc`;
-- GPU NVIDIA y controlador compatible.
+Para compilar y ejecutar todos los programas se necesita:
 
-### Paso 1: verificar el entorno
+- WSL 2 con Ubuntu o una distribución Linux equivalente;
+- GPU NVIDIA compatible con CUDA;
+- controlador NVIDIA visible desde WSL;
+- NVIDIA CUDA Toolkit con `nvcc` disponible en `PATH`;
+- `g++` con soporte para C++17;
+- `latexmk` y una distribución LaTeX, únicamente para regenerar el informe.
+
+Comprueba las herramientas principales:
+
+```bash
+g++ --version
+nvcc --version
+nvidia-smi
+```
+
+El entorno usado para los resultados incluidos fue CUDA 12.4 con una NVIDIA
+GeForce RTX 4050 Laptop GPU.
+
+### 2. Obtener y abrir el repositorio
+
+```bash
+git clone https://github.com/DanielBarillasM/Hoja-de-Trabajo-3_Daniel-Barillas_22193_CPYD_Sec-40.git
+cd Hoja-de-Trabajo-3_Daniel-Barillas_22193_CPYD_Sec-40
+```
+
+Si ya existe una copia local:
+
+```bash
+git pull origin main
+```
+
+### 3. Verificar el entorno
 
 ```bash
 bash scripts/verificar_entorno.sh
 ```
 
-### Paso 2: ejecutar toda la entrega
+El script debe mostrar `[OK]` para `g++`, `nvcc` y `nvidia-smi`, además del
+modelo de GPU detectado. Si alguna comprobación falla, no ejecutes la suite
+hasta corregirla.
+
+### 4. Compilar y ejecutar la entrega completa
 
 ```bash
 bash scripts/compilar.sh
 ```
 
-### Alternativa: ejecutar solo la comparación
+Este comando:
+
+1. crea `build/` y `results/`;
+2. compila la suma CUDA de la Parte 1;
+3. compila las soluciones de clasificación de la Parte 2;
+4. compila la versión secuencial CPU;
+5. compila y ejecuta la comparación CPU/GPU;
+6. guarda cada salida en un archivo `.txt` dentro de `results/`.
+
+Los ejecutables quedan en `build/`, que está excluido mediante `.gitignore` y
+no debe incluirse en la entrega.
+
+### 5. Compilación manual por programa
 
 ```bash
 mkdir -p build results
+
+# Parte 1: suma CUDA
+nvcc -std=c++17 -O2 source/parte1_suma_cuda.cu \
+  -o build/parte1_suma_cuda
+./build/parte1_suma_cuda | tee results/parte1_suma_cuda.txt
+
+# Parte 2: clasificación por umbral
+nvcc -std=c++17 -O2 source/parte2_umbral_clasificacion.cu \
+  -o build/parte2_umbral_clasificacion
+./build/parte2_umbral_clasificacion \
+  | tee results/parte2_umbral_clasificacion.txt
+
+# Parte 2: plantilla vacio.cu completada
+nvcc -std=c++17 -O2 source/vacio.cu -o build/vacio
+./build/vacio | tee results/vacio.txt
+
+# Parte 3: versión exclusivamente CPU
+g++ -std=c++17 -O2 source/parte3_cpu_vs_gpu.cpp \
+  -o build/parte3_cpu_vs_gpu
+./build/parte3_cpu_vs_gpu | tee results/parte3_cpu_vs_gpu.txt
+
+# Parte 3: comparación CPU/GPU
 nvcc -std=c++17 -O2 source/parte3_comparacion_cpu_gpu.cu \
   -o build/parte3_comparacion_cpu_gpu
 ./build/parte3_comparacion_cpu_gpu \
   | tee results/parte3_comparacion_cpu_gpu.txt
 ```
 
-La salida reproducible se conserva en
-[`results/parte3_comparacion_cpu_gpu.txt`](results/parte3_comparacion_cpu_gpu.txt).
-La [guía de validación](docs/VALIDACION.md) explica los criterios de aceptación.
+`source/umbralizar.cu` es una variante equivalente de la Parte 2. Puede
+compilarse por separado con:
+
+```bash
+nvcc -std=c++17 -O2 source/umbralizar.cu -o build/umbralizar
+./build/umbralizar
+```
+
+### 6. Regenerar el informe PDF
+
+Desde la raíz del repositorio:
+
+```bash
+latexmk -pdf -interaction=nonstopmode -halt-on-error \
+  -outdir=output/pdf report/informe_ht3.tex
+```
+
+El archivo generado queda en
+[`output/pdf/informe_ht3.pdf`](output/pdf/informe_ht3.pdf).
 
 ## Metodología de medición
 
@@ -255,17 +348,33 @@ del contexto CUDA distorsione el resultado. CPU y GPU se comparan contra
 | CPU/GPU | [`parte-3.png`](report/imagenes/parte-3.png) | Suite completa y validación correcta |
 | Comparación | [`comparación_parte-3.png`](report/imagenes/comparación_parte-3.png) | Tiempos, aceleraciones y 0 discrepancias |
 
-## Informe
+## Solución de problemas
 
-- Fuente: [`report/informe_ht3.tex`](report/informe_ht3.tex)
-- PDF: [`output/pdf/informe_ht3.pdf`](output/pdf/informe_ht3.pdf)
-- Tema visual: **Tech Innovation**, con azul eléctrico, cian y alto contraste.
+### `nvcc: command not found`
 
-Regeneración:
+CUDA Toolkit no está instalado o su carpeta `bin` no está en `PATH`. Ejecuta
+`nvcc --version` y corrige la instalación antes de compilar.
+
+### `nvidia-smi` no detecta la GPU en WSL
+
+Verifica que WSL 2 esté activo y que Windows tenga un controlador NVIDIA con
+soporte para CUDA en WSL. Reinicia WSL después de actualizar el controlador.
+
+### `$'\r': command not found`
+
+El script tiene finales de línea Windows. El repositorio incluye
+`.gitattributes` para forzar LF; después de actualizar, restaura los scripts:
 
 ```bash
-latexmk -pdf -interaction=nonstopmode \
-  -outdir=output/pdf report/informe_ht3.tex
+git pull origin main
+git restore --source=HEAD --worktree scripts/compilar.sh scripts/verificar_entorno.sh
+```
+
+### Limpiar y recompilar
+
+```bash
+rm -rf build
+bash scripts/compilar.sh
 ```
 
 ## Conclusión

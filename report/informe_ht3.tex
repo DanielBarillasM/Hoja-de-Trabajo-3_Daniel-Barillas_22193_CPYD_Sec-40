@@ -62,7 +62,7 @@
   urlcolor=ElectricBlue,
   citecolor=ElectricBlue,
   pdftitle={Hoja de Trabajo 3 - CUDA, paralelismo de datos y rendimiento},
-  pdfauthor={Daniel Barillas},
+  pdfauthor={Pablo Daniel Barillas Moreno},
   pdfsubject={Computacion Paralela y Distribuida}
 }
 
@@ -72,7 +72,7 @@
 \fancyhf{}
 \fancyhead[L]{\small\color{ElectricBlue}\textbf{HOJA DE TRABAJO 3}}
 \fancyhead[R]{\small\color{BodyGray}Computación Paralela y Distribuida}
-\fancyfoot[L]{\small\color{BodyGray}Daniel Barillas - 22193}
+\fancyfoot[L]{\small\color{BodyGray}Pablo Daniel Barillas Moreno - 22193}
 \fancyfoot[R]{\small\color{ElectricBlue}\textbf{\thepage}}
 \renewcommand{\headrulewidth}{0.5pt}
 \renewcommand{\headrule}{\hbox to\headwidth{\color{ElectricBlue}\leaders\hrule height \headrulewidth\hfill}}
@@ -149,10 +149,10 @@
 
   \vfill
   \begin{tabular}{@{}ll@{}}
-    \textcolor{NeonCyan}{\textbf{Estudiante}} & Daniel Barillas \\
+    \textcolor{NeonCyan}{\textbf{Estudiante}} & Pablo Daniel Barillas Moreno \\
     \textcolor{NeonCyan}{\textbf{Carné}} & 22193 \\
     \textcolor{NeonCyan}{\textbf{Sección}} & 40 \\
-    \textcolor{NeonCyan}{\textbf{Semestre indicado}} & 2, 2025 \\
+    \textcolor{NeonCyan}{\textbf{Semestre}} & 2, 2026 \\
   \end{tabular}
   \vspace{2.8cm}
 \end{titlepage}
@@ -557,13 +557,6 @@ compilador. Por ello:
   \item se valida corrección antes de interpretar velocidad.
 \end{itemize}
 
-\subsection{Fecha del documento}
-
-El enunciado indica simultáneamente “Semestre 2, 2025” y “miércoles 21 de
-octubre”. El informe conserva el semestre declarado y evita generar una fecha
-automática con \texttt{\textbackslash today}, que podría introducir un año ajeno
-a la actividad.
-
 \section{Conclusiones}
 
 La suma vectorial demuestra un caso de paralelismo de datos directo: cada hilo
@@ -602,20 +595,8 @@ compiladas y ejecutadas, y la comparación final terminó con cero discrepancias
 \code{source/parte3_comparacion_cpu_gpu.cu} & Benchmark CPU/GPU justo \\
 \code{scripts/verificar_entorno.sh} & Verificación de compiladores y GPU \\
 \code{scripts/compilar.sh} & Compilación, ejecución y captura de resultados \\
-\code{docs/ENUNCIADO.md} & Transcripción del enunciado \\
-\code{docs/VALIDACION.md} & Procedimiento de reproducción \\
 \bottomrule
 \end{tabularx}
 \normalsize
-
-\section{Comandos mínimos para completar la medición}
-
-\begin{Verbatim}[frame=single,framesep=3mm,fontsize=\small,
-  rulecolor=\color{ElectricBlue},formatcom=\color{DarkGray}]
-cd /ruta/al/repositorio
-bash scripts/verificar_entorno.sh
-bash scripts/compilar.sh
-cat results/parte3_comparacion_cpu_gpu.txt
-\end{Verbatim}
 
 \end{document}
