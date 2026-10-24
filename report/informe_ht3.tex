@@ -89,16 +89,16 @@ __global__ void sumarArreglos(const int *A, const int *B, int *C, int N) {
 
 \subsection*{\color{accent}Preguntas clave}
 \textbf{1. ¿Qué partes se ejecutan en CPU y en GPU?}
-La parte del host incluye la inicialización y lectura de datos, la reserva y liberación de memoria, las copias con `cudaMemcpy` y la impresión final. La parte del device se ejecuta dentro del kernel, donde cada hilo realiza la suma de un único índice.
+La mayor parte de la lógica de control del programa se ejecuta en la CPU. Allí se declaran y se inicializan los arreglos, se determina el tamaño de entrada, se invoca la reserva de memoria con `cudaMalloc`, se ejecutan las transferencias con `cudaMemcpy`, se verifica el estado del dispositivo y finalmente se imprimen los resultados. En contraste, la parte verdaderamente intensiva del cómputo se ejecuta en la GPU dentro del kernel `sumarArreglos`. Cada hilo toma una posición del arreglo, calcula el índice correspondiente y realiza la suma de los valores almacenados en `A[idx]` y `B[idx]`. Es decir, la CPU coordina y supervisa la ejecución, mientras la GPU realiza la operación paralela sobre muchos elementos al mismo tiempo.
 
 \textbf{2. ¿Qué pasa si cambia grid y block?}
-Cambiar estos valores afecta la cantidad total de hilos que ejecutan el programa. Si la configuración es insuficiente, algunos elementos quedan sin procesar. Por ello se usa la validación `if (idx < N)` para evitar accesos fuera de rango.
+El valor de `grid` y `block` determina cuántos hilos se lanzan en paralelo. En una configuración adecuada, cada hilo procesa una posición distinta del arreglo y el trabajo se distribuye eficientemente entre los multiprocesadores de la GPU. Si se reduce el tamaño del bloque o se usa un grid demasiado pequeño, entonces el número total de hilos puede ser insuficiente para cubrir todos los elementos del arreglo. En ese caso, algunos índices quedan sin ser calculados y el resultado se vuelve incompleto. Por esa razón se usa la condición `if (idx < N)`, que garantiza que ningún hilo acceda a una posición fuera de rango dentro del vector. Además, si se modifica la configuración sin ajustar la cantidad de datos, el rendimiento puede disminuir y, en ocasiones, la salida puede ser incorrecta.
 
 \textbf{3. ¿Qué pasa si no se reserva memoria?}
-Sin `cudaMalloc`, los punteros del device no apuntan a memoria válida. El kernel puede fallar o producir resultados incorrectos.
+La reserva de memoria en el device es fundamental porque la GPU no puede operar directamente sobre los arreglos creados en el host. Si no se ejecuta `cudaMalloc`, los punteros del dispositivo no apuntan a memoria válida y el kernel puede intentar escribir en ubicaciones inexistentes. Esto provoca errores en tiempo de ejecución, resultados corruptos o incluso fallos del programa. Lo mismo ocurre si la memoria se libera incorrectamente antes de que el resultado sea copiado al host. En resumen, la gestión de memoria es requisito indispensable para la ejecución segura y correcta de cualquier programa CUDA.
 
-\textbf{4. ¿Qué pasa si no se transfiere el resultado al host?}
-El cálculo ocurre en la GPU, pero el host no puede visualizarlo ni usarlo. La transferencia `device -> host` es imprescindible para obtener el resultado final.
+\textbf{4. ¿Qué pasa si no se transfiere el resultado del GPU al CPU?}
+Aunque el kernel realice el cálculo correcto en la GPU, el host no puede acceder a esos valores si no se ejecuta la operación de retorno `cudaMemcpy` desde el device hacia el host. En ese caso, el programa puede aparentar funcionar, pero el arreglo de salida en la CPU quedará sin información útil. Como consecuencia, no se pueden imprimir los resultados ni reutilizarlos para otra operación. La transferencia del resultado es lo que conecta el cómputo paralelo del dispositivo con la lógica de presentación y análisis del sistema operativo. Sin ella, la GPU trabaja de forma aislada y el usuario no obtiene ningún valor útil.
 
 \section*{\color{uvgblue}Parte 2: Clasificación por umbral}
 La segunda parte del trabajo consiste en clasificar cada valor de un arreglo con respecto a un umbral. La lógica es la siguiente:
@@ -166,6 +166,51 @@ auto duracionCPU = std::chrono::duration_cast<std::chrono::microseconds>(finCPU 
 
 \subsection*{\color{accent}Interpretación}
 En problemas grandes, la GPU suele superar a la CPU porque cada hilo realiza una pequeña parte del trabajo al mismo tiempo. Esta diferencia es precisamente la base del cómputo paralelo.
+
+\subsection*{\color{accent}Programa 1: suma de arreglos en CUDA}
+\textbf{Descripción:} Este programa implementa una suma vectorial típica en CUDA, en la cual cada hilo calcula una posición distinta del arreglo de salida. La operación es completamente paralela y se aprovecha la arquitectura masiva de hilos que ofrece la GPU.
+
+\textbf{Objetivo:} Verificar que la memoria del dispositivo se gestione de forma correcta, que el kernel ejecute la suma de manera simultánea y que el resultado final se retorne al host sin perder precisión ni integridad.
+
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox[c][4.8cm][c]{0.9\linewidth}{\centering \textbf{[INSERTAR CAPTURA 1: salida del programa de suma CUDA]}\\[0.5em] \small Reemplazar este espacio con la captura de la terminal mostrando A, B y C.}}
+    \caption{Salida del programa de suma de arreglos en CUDA.}
+\end{figure}
+
+\textbf{Análisis del resultado:} El resultado final del programa corresponde a la suma elemento a elemento de los arreglos A y B, demostrando que la transferencia host-device y la ejecución del kernel fueron correctas. La salida muestra valores como 4, 7, 10, 13, etc., lo cual confirma que cada hilo accedió a la posición correcta del vector, sin sobreescribir información ni producir errores de sincronización. Este ejercicio demuestra la utilidad del intensivo paralelismo de datos y la forma en que CUDA distribuye el cálculo entre muchísimos hilos.
+
+\textbf{Observaciones:} La clave del ejercicio es que cada hilo calcula una posición del arreglo y no necesita depender del resultado de otros hilos para obtener su valor. Esto hace que el problema sea ideal para la GPU, porque el cálculo es independiente para cada índice.
+
+\subsection*{\color{accent}Programa 2: clasificación por umbral}
+\textbf{Descripción:} Este segundo programa toma un conjunto de valores enteros y determina si cada número es menor o mayor que un umbral definido. La salida del kernel es binaria: 1 si el elemento cumple la condición y 0 si no la cumple.
+
+\textbf{Objetivo:} Aplicar el modelo de paralelismo de datos a una tarea de clasificación lógica y comprobar que cada valor se evalúa de forma independiente en la GPU.
+
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox[c][4.8cm][c]{0.9\linewidth}{\centering \textbf{[INSERTAR CAPTURA 2: salida del programa de clasificación por umbral]}\\[0.5em] \small Reemplazar este espacio con la captura de la consola mostrando in[i] y out[i].}}
+    \caption{Resultado de la clasificación binaria por umbral.}
+\end{figure}
+
+\textbf{Análisis del resultado:} La salida muestra que todos los valores menores a 50 reciben 0, mientras que los elementos iguales o mayores a 50 reciben 1. Esto refleja correctamente la condición lógica `entrada[idx] >= umbral`. La clasificación se realiza sin dependencias entre elementos, por lo cual es una operación muy adecuada para CUDA. La validación final del programa confirma que el kernel, la transferencia de datos y la sincronización del dispositivo fueron correctas.
+
+\textbf{Observaciones:} Este ejercicio es especialmente útil para entender la lógica de decisiones paralelas. En lugar de evaluar los valores de forma secuencial, la GPU procesa cada caso al mismo tiempo, lo cual es muy eficiente cuando se requiere revisar grandes volúmenes de datos.
+
+\subsection*{\color{accent}Programa 3: versión CPU y medición de tiempos}
+\textbf{Descripción:} La versión CPU del problema suma los elementos de ambos arreglos de manera secuencial, utilizando una función que recorre el vector en un solo hilo. Luego se mide el tiempo de ejecución para comparar el rendimiento con la variante paralela.
+
+\textbf{Objetivo:} Cuantificar la diferencia entre un enfoque secuencial y un enfoque paralelo, y evaluar cómo la GPU puede acelerar tareas repetitivas sobre arreglos grandes.
+
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox[c][4.8cm][c]{0.9\linewidth}{\centering \textbf{[INSERTAR CAPTURA 3: comparación de tiempo de CPU vs GPU]}\\[0.5em] \small Reemplazar este espacio con la imagen que muestre el tiempo de ejecución y la salida del programa.}}
+    \caption{Medición de rendimiento de la versión CPU.}
+\end{figure}
+
+\textbf{Análisis del resultado:} En arreglos grandes, la CPU tarda más porque debe recorrer cada elemento uno por uno. La GPU, por su parte, puede ejecutar muchas operaciones simultáneamente. Este tipo de comparación es una herramienta muy útil para justificar el uso de CUDA en problemas con gran cantidad de datos. Aunque la CPU sigue siendo importante para lógica de control y tareas secuenciales, la GPU muestra una ventaja clara cuando el problema es naturalmente paralelo.
+
+\textbf{Observaciones:} La medición de tiempo con `std::chrono` permite cuantificar la diferencia de rendimiento de manera objetiva. Esto ayuda a transformar una observación conceptual del paralelismo en una evidencia real, útil tanto para análisis académico como para decisiones de diseño de software.
 
 \section*{\color{uvgblue}Conclusiones}
 La programación con CUDA permite resolver problemas de gran escala de una forma mucho más eficiente cuando el cálculo puede dividirse en tareas independientes. La GPU no reemplaza por completo a la CPU, sino que complementa su rendimiento en problemas de naturaleza masivamente paralela.
