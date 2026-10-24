@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/CUDA-C%2B%2B-0066FF?style=for-the-badge&logo=nvidia&logoColor=white" alt="CUDA C++" />
   <img src="https://img.shields.io/badge/Plataforma-WSL%202-1E1E1E?style=for-the-badge&logo=linux&logoColor=00FFFF" alt="WSL 2" />
-  <img src="https://img.shields.io/badge/Estado-Listo%20para%20medir-0066FF?style=for-the-badge" alt="Listo para medir" />
+  <img src="https://img.shields.io/badge/Estado-Completado-16835B?style=for-the-badge" alt="Completado" />
 </p>
 
 <p align="center">
@@ -179,9 +179,24 @@ El comparador informa:
 4. aceleración respecto de CPU;
 5. validación elemento por elemento.
 
-No se afirma que la GPU sea más rápida antes de ejecutar la prueba. Para
-entradas pequeñas, el costo de transferencia puede superar el beneficio del
-paralelismo.
+### Resultado medido
+
+La prueba se ejecutó en una NVIDIA GeForce RTX 4050 Laptop GPU con CUDA 12.4:
+
+| Métrica | Resultado |
+|---|---:|
+| Elementos | 8,388,608 |
+| Tiempo CPU | 5.106 ms |
+| GPU, solo kernel | 0.662 ms |
+| GPU, incluyendo H2D + kernel + D2H | 11.359 ms |
+| Aceleración del kernel | 7.72x |
+| Aceleración extremo a extremo | 0.45x |
+| Discrepancias | 0 |
+
+El kernel GPU fue 7.72 veces más rápido que la CPU. Sin embargo, al incluir
+las transferencias, la ejecución GPU completa tardó aproximadamente 2.22 veces
+lo que tardó la CPU. Este resultado muestra que paralelizar el cálculo no
+garantiza acelerar el programa completo cuando la comunicación domina el costo.
 
 ## Compilación y ejecución
 
@@ -214,9 +229,9 @@ nvcc -std=c++17 -O2 source/parte3_comparacion_cpu_gpu.cu \
   | tee results/parte3_comparacion_cpu_gpu.txt
 ```
 
-Cuando termine, comparte `results/parte3_comparacion_cpu_gpu.txt` para
-incorporar los valores reales al informe. La
-[guía de validación](docs/VALIDACION.md) explica los criterios de aceptación.
+La salida reproducible se conserva en
+[`results/parte3_comparacion_cpu_gpu.txt`](results/parte3_comparacion_cpu_gpu.txt).
+La [guía de validación](docs/VALIDACION.md) explica los criterios de aceptación.
 
 ## Metodología de medición
 
@@ -236,10 +251,9 @@ del contexto CUDA distorsione el resultado. CPU y GPU se comparan contra
 | 1 | [`parte-1.png`](report/imagenes/parte-1.png) | Secuencia `4..49` correcta |
 | 2 | [`parte-2.png`](report/imagenes/parte-2.png) | Cambio de 0 a 1 en 50 |
 | Plantilla | [`Archivo_vacío_Ejecución.png`](report/imagenes/Archivo_vacío_Ejecución.png) | `vacio.cu` completado |
-| CPU | [`parte-3.png`](report/imagenes/parte-3.png) | Línea base CPU histórica |
-
-La captura CPU se conserva como evidencia, pero debe complementarse con la
-salida nueva del comparador. Los tiempos no deben copiarse entre máquinas.
+| Entorno | [`verificar_entorno.png`](report/imagenes/verificar_entorno.png) | CUDA 12.4 y RTX 4050 detectados |
+| CPU/GPU | [`parte-3.png`](report/imagenes/parte-3.png) | Suite completa y validación correcta |
+| Comparación | [`comparación_parte-3.png`](report/imagenes/comparación_parte-3.png) | Tiempos, aceleraciones y 0 discrepancias |
 
 ## Informe
 
@@ -258,5 +272,7 @@ latexmk -pdf -interaction=nonstopmode \
 
 El repositorio demuestra el flujo completo de CUDA: preparación en host,
 memoria explícita, lanzamiento del kernel, sincronización, retorno de resultados
-y validación. La comparación queda instrumentada para medir por separado
-cálculo y transferencias, permitiendo una interpretación honesta y reproducible.
+y validación. La medición confirma una ventaja de 7.72x dentro del kernel, pero
+también muestra que las transferencias reducen la aceleración extremo a extremo
+a 0.45x. Por ello, el beneficio de la GPU depende tanto del paralelismo como de
+la cantidad de comunicación necesaria.

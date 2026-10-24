@@ -63,6 +63,24 @@ Debe informar:
 - aceleración en ambos escenarios;
 - cero discrepancias entre CPU, GPU y la suma esperada.
 
+### Resultado obtenido
+
+La ejecución final se realizó con CUDA 12.4 sobre una NVIDIA GeForce RTX 4050
+Laptop GPU:
+
+| Métrica | Resultado |
+|---|---:|
+| Elementos | 8,388,608 |
+| Tiempo CPU | 5.106 ms |
+| GPU, solo kernel | 0.662 ms |
+| GPU, extremo a extremo | 11.359 ms |
+| Aceleración del kernel | 7.72x |
+| Aceleración extremo a extremo | 0.45x |
+| Discrepancias | 0 |
+
+La validación funcional fue correcta. La GPU aceleró el kernel, pero no el
+ciclo completo debido al costo de transferir 96 MiB entre host y device.
+
 ## 4. Alcance de los tiempos
 
 La reserva con `cudaMalloc` se excluye del tiempo extremo a extremo porque es
@@ -82,4 +100,5 @@ latexmk -pdf -interaction=nonstopmode \
 
 El resultado esperado es `output/pdf/informe_ht3.pdf`. Antes de entregar,
 debe abrirse y comprobarse visualmente que no existan textos cortados,
-capturas ilegibles ni referencias pendientes.
+capturas ilegibles ni referencias pendientes. La versión incluida fue
+renderizada y revisada después de incorporar las mediciones finales.

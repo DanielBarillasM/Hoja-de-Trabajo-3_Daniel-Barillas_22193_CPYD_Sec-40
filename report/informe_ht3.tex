@@ -114,7 +114,6 @@
 
 \newcommand{\code}[1]{\texttt{\detokenize{#1}}}
 \newcommand{\statusok}{\textcolor{SuccessGreen}{\textbf{Cumplido}}}
-\newcommand{\statuspending}{\textcolor{WarningAmber}{\textbf{Pendiente de medición}}}
 
 \begin{document}
 \hypersetup{pageanchor=false}
@@ -174,10 +173,11 @@ primera parte implementa una suma de arreglos en GPU y analiza la separación
 entre host y device. La segunda completa la plantilla \code{vacio.cu} para
 clasificar valores respecto de un umbral. La tercera construye una versión
 secuencial en CPU y un comparador reproducible CPU/GPU que distingue el tiempo
-del kernel del costo completo de transferencias. Las salidas disponibles
-validan numéricamente las Partes 1 y 2 y la línea base CPU. El comparador queda
-listo para ejecutarse en el equipo CUDA de entrega, sin sustituir mediciones
-reales por estimaciones.
+del kernel del costo completo de transferencias. Las tres partes fueron
+ejecutadas y validadas en una NVIDIA GeForce RTX 4050 Laptop GPU. El kernel
+alcanzó una aceleración de 7.72x respecto de CPU; al incluir transferencias, la
+aceleración extremo a extremo fue 0.45x. El resultado demuestra que una mejora
+en cómputo no implica necesariamente una mejora en el programa completo.
 \end{summarybox}
 
 \section{Trazabilidad con el enunciado}
@@ -207,7 +207,7 @@ Versión exclusivamente CPU &
 \statusok \\
 Medición CPU y GPU &
 \code{source/parte3_comparacion_cpu_gpu.cu}, con eventos CUDA y reloj CPU &
-\statuspending \\
+\statusok \\
 Informe en PDF &
 Fuente LaTeX, capturas integradas y salida en \code{output/pdf} &
 \statusok \\
@@ -220,14 +220,19 @@ No incluir ejecutables &
 \label{tab:trazabilidad}
 \end{table}
 
-\begin{warningbox}[Dato pendiente y criterio de honestidad]
-El equipo disponible durante la preparación final no expone \code{nvcc} ni una
-GPU NVIDIA en WSL. Por esa razón, los tiempos GPU nuevos no se inventan ni se
-extrapolan desde otra máquina. El código, los comandos y la tabla están listos;
-los valores se incorporarán a partir de
-\code{results/parte3_comparacion_cpu_gpu.txt} cuando se ejecute en el entorno
-CUDA usado para la entrega.
-\end{warningbox}
+\begin{resultbox}[Entorno de ejecución validado]
+La medición final se realizó en WSL con CUDA 12.4 y una NVIDIA GeForce RTX 4050
+Laptop GPU. El controlador reportó la versión 621.01 y 6,141 MiB de memoria.
+Los compiladores \code{g++} y \code{nvcc}, además de \code{nvidia-smi}, fueron
+verificados antes de ejecutar la suite.
+\end{resultbox}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.40\textheight,keepaspectratio]{verificar_entorno.png}
+  \caption{Verificación del entorno WSL, CUDA y GPU antes de compilar.}
+  \label{fig:entorno}
+\end{figure}
 
 \section{Fundamentos del modelo CUDA}
 
@@ -432,14 +437,14 @@ void sumarArreglosCPU(
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.96\textwidth,height=0.48\textheight,keepaspectratio]{parte-3.png}
-  \caption{Evidencia histórica de la versión CPU: 2\,787 microsegundos para un millón de elementos.}
+  \caption{Ejecución de la versión CPU y de la comparación CPU/GPU.}
   \label{fig:cpu}
 \end{figure}
 
-La Figura~\ref{fig:cpu} valida la versión secuencial y sus primeros valores
-\(4,7,10,13,16\). Ese tiempo es una línea base histórica y no se compara con
-la nueva versión GPU porque el tamaño del problema y la ejecución no son los
-mismos.
+La Figura~\ref{fig:cpu} valida la versión secuencial para un millón de
+elementos, con 1\,496 microsegundos, y muestra a continuación la comparación
+justa sobre 8\,388\,608 elementos. Los primeros valores
+\(4,7,10,13,16\) coinciden en ambas implementaciones.
 
 \subsection{Diseño de la comparación justa}
 
@@ -460,7 +465,7 @@ Esta separación evita una conclusión engañosa. Una GPU puede ejecutar el
 kernel rápidamente y, aun así, perder ventaja si el problema es pequeño o las
 transferencias dominan el costo total.
 
-\subsection{Tabla preparada para la medición}
+\subsection{Resultados medidos}
 
 \begin{table}[H]
 \centering
@@ -469,27 +474,32 @@ transferencias dominan el costo total.
 \textbf{Métrica} & \textbf{Resultado} \\
 \midrule
 Cantidad de elementos & 8\,388\,608 \\
-Tiempo CPU & Pendiente de ejecución CUDA \\
-Tiempo GPU, solo kernel & Pendiente de ejecución CUDA \\
-Tiempo GPU, H2D + kernel + D2H & Pendiente de ejecución CUDA \\
-Aceleración, solo kernel & Pendiente de ejecución CUDA \\
-Aceleración extremo a extremo & Pendiente de ejecución CUDA \\
-Discrepancias CPU/GPU & Debe ser 0 \\
+Tiempo CPU & 5.106 ms \\
+Tiempo GPU, solo kernel & 0.662 ms \\
+Tiempo GPU, H2D + kernel + D2H & 11.359 ms \\
+Aceleración, solo kernel & 7.72x \\
+Aceleración extremo a extremo & 0.45x \\
+Discrepancias CPU/GPU & 0 \\
 \bottomrule
 \end{tabularx}
-\caption{Campos que se completarán con la salida del comparador.}
+\caption{Resultados CPU/GPU obtenidos en la RTX 4050 Laptop GPU.}
 \label{tab:tiempos}
 \end{table}
 
-\begin{resultbox}[Comando para producir los datos]
-\begin{Verbatim}[fontsize=\small]
-bash scripts/verificar_entorno.sh
-bash scripts/compilar.sh
-\end{Verbatim}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.96\textwidth,height=0.42\textheight,keepaspectratio]{comparación_parte-3.png}
+  \caption{Salida completa del benchmark CPU/GPU y validación sin discrepancias.}
+  \label{fig:comparacion}
+\end{figure}
 
-La salida relevante se guarda en:
-\code{results/parte3_comparacion_cpu_gpu.txt}.
-\end{resultbox}
+El kernel tardó solo 0.662 ms frente a 5.106 ms de CPU, por lo que el cálculo
+paralelo aislado fue 7.72 veces más rápido. No obstante, las transferencias de
+64 MiB de entrada y 32 MiB de salida elevaron el ciclo GPU a 11.359 ms. En este
+caso, la CPU completó la operación extremo a extremo en aproximadamente el
+45\% del tiempo GPU. Esto no contradice la ventaja del kernel: demuestra que el
+costo de comunicación domina cuando los datos se transfieren para una sola
+operación sencilla.
 
 \section{Validación integral}
 
@@ -511,7 +521,7 @@ Primeros valores 4, 7, 10, 13 y 16; verificación completa &
 \statusok \\
 CPU/GPU &
 Mismos datos y cero discrepancias &
-\statuspending \\
+\statusok \\
 Memoria &
 Reserva, copia, sincronización y liberación comprobadas &
 \statusok \\
@@ -551,7 +561,7 @@ compilador. Por ello:
 
 El enunciado indica simultáneamente “Semestre 2, 2025” y “miércoles 21 de
 octubre”. El informe conserva el semestre declarado y evita generar una fecha
-automática con \code{\textbackslash today}, que podría introducir un año ajeno
+automática con \texttt{\textbackslash today}, que podría introducir un año ajeno
 a la actividad.
 
 \section{Conclusiones}
@@ -567,16 +577,15 @@ independiente por dato. La transición exacta en 50 valida la condición
 completada de acuerdo con el enunciado.
 
 La Parte 3 distingue correctamente entre demostrar paralelismo y demostrar
-rendimiento. No basta afirmar que una GPU es más rápida: deben usarse los
-mismos datos, establecer los límites temporales y comprobar la salida. El
-comparador implementado mide por separado el kernel y el ciclo completo,
-permitiendo analizar tanto capacidad de cálculo como costo de comunicación.
+rendimiento. El kernel GPU alcanzó una aceleración de 7.72x, pero la ejecución
+extremo a extremo obtuvo 0.45x al incluir transferencias. La GPU fue más rápida
+en cómputo y más lenta en el ciclo completo, lo que evidencia el peso de la
+comunicación para una operación aritmética sencilla.
 
 En conjunto, la actividad evidencia el ciclo completo de una aplicación CUDA:
 preparación en CPU, administración explícita de memoria, distribución en
-hilos, sincronización, retorno de datos y validación. La única evidencia
-pendiente es la medición específica de hardware, que debe obtenerse en el
-equipo CUDA y colocarse en la Tabla~\ref{tab:tiempos}.
+hilos, sincronización, retorno de datos y validación. Las tres partes fueron
+compiladas y ejecutadas, y la comparación final terminó con cero discrepancias.
 
 \appendix
 \section{Archivos principales}
