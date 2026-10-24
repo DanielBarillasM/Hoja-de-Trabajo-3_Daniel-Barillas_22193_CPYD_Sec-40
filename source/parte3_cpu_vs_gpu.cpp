@@ -34,7 +34,7 @@ int main() {
     }
 
     std::cout << ANSI_BOLD ANSI_CYAN << "\n=========================================" << ANSI_RESET << std::endl;
-    std::cout << ANSI_BOLD ANSI_CYAN << "=== PARTE 3: COMPARACIÓN CPU VS GPU ===" << ANSI_RESET << std::endl;
+    std::cout << ANSI_BOLD ANSI_CYAN << "=== PARTE 3: VERSION SECUENCIAL EN CPU ===" << ANSI_RESET << std::endl;
     std::cout << ANSI_BOLD ANSI_CYAN << "=========================================" << ANSI_RESET << std::endl;
 
     std::cout << ANSI_YELLOW << "[INFO] Generando arreglos de tamaño " << N << " ..." << ANSI_RESET << std::endl;
@@ -53,7 +53,17 @@ int main() {
     std::cout << ANSI_GREEN << "\nTiempo CPU: " << duracionCPU << " microsegundos" << ANSI_RESET << std::endl;
     std::cout << ANSI_GREEN << "✅ La versión CPU fue ejecutada correctamente." << ANSI_RESET << std::endl;
 
-    std::cout << ANSI_YELLOW << "\n[ANÁLISIS] En arreglos grandes, la GPU suele ser más rápida porque ejecuta tareas en paralelo." << ANSI_RESET << std::endl;
+    bool correcto = true;
+    for (int i = 0; i < N; ++i) {
+        if (C[i] != A[i] + B[i]) {
+            correcto = false;
+            break;
+        }
+    }
 
-    return 0;
+    std::cout << (correcto ? ANSI_GREEN : ANSI_RED)
+              << "[VALIDACION] Resultado CPU: " << (correcto ? "CORRECTO" : "INCORRECTO")
+              << ANSI_RESET << std::endl;
+
+    return correcto ? 0 : 1;
 }

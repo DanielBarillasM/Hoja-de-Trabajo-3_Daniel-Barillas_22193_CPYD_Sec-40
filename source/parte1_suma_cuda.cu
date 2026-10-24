@@ -140,7 +140,17 @@ int main() {
         return -1;
     }
 
-    cudaDeviceSynchronize();
+    err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        std::printf(ANSI_RED "[ERROR] El kernel fallo durante la ejecucion: %s\n" ANSI_RESET, cudaGetErrorString(err));
+        cudaFree(d_A);
+        cudaFree(d_B);
+        cudaFree(d_C);
+        delete[] h_A;
+        delete[] h_B;
+        delete[] h_C;
+        return -1;
+    }
     std::printf(ANSI_GREEN "[OK] El kernel terminó correctamente.\n" ANSI_RESET);
 
     // ============================================================

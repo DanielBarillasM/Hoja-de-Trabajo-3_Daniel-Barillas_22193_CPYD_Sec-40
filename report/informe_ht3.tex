@@ -1,220 +1,612 @@
-\documentclass[11pt]{article}
+\documentclass[11pt,a4paper]{article}
+
 \usepackage[utf8]{inputenc}
-\usepackage[spanish]{babel}
-\usepackage{graphicx}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[a4paper,top=2.35cm,bottom=2.25cm,left=2.35cm,right=2.35cm]{geometry}
+\usepackage{helvet}
+\usepackage{inconsolata}
 \usepackage{amsmath}
-\usepackage{listings}
-\usepackage{hyperref}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{float}
 \usepackage{xcolor}
 \usepackage{enumitem}
-\usepackage{float}
-\usepackage[a4paper,margin=1in]{geometry}
-\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{fancyvrb}
+\usepackage{upquote}
 \usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{hyperref}
 
-\definecolor{uvgblue}{RGB}{0, 78, 150}
-\definecolor{uvggreen}{RGB}{34, 139, 34}
-\definecolor{cudaGreen}{RGB}{118, 185, 0}
-\definecolor{softgray}{RGB}{245, 247, 249}
-\definecolor{accent}{RGB}{74, 144, 226}
+\renewcommand{\familydefault}{\sfdefault}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.72em}
+\setlength{\emergencystretch}{2em}
+\setlist[itemize]{leftmargin=1.45em,itemsep=0.25em,topsep=0.35em}
+\setlist[enumerate]{leftmargin=1.65em,itemsep=0.3em,topsep=0.35em}
 
-\titleformat{\section}{\color{uvgblue}\normalfont\Large\bfseries}{\thesection}{1em}{}
-\titleformat{\subsection}{\color{accent}\normalfont\large\bfseries}{\thesubsection}{1em}{}
+% Tema Tech Innovation
+\definecolor{ElectricBlue}{HTML}{0066FF}
+\definecolor{NeonCyan}{HTML}{00BFCB}
+\definecolor{DarkGray}{HTML}{1E1E1E}
+\definecolor{BodyGray}{HTML}{343A40}
+\definecolor{SoftBlue}{HTML}{EDF4FF}
+\definecolor{SoftCyan}{HTML}{E8FCFD}
+\definecolor{SoftGray}{HTML}{F4F6F8}
+\definecolor{SuccessGreen}{HTML}{16835B}
+\definecolor{WarningAmber}{HTML}{9A6700}
 
-\title{
-    \vspace{1cm}
-    {\color{uvgblue}\Huge\bfseries Hoja de Trabajo 3} \\
-    \vspace{0.4cm}
-    {\color{cudaGreen}\Large\bfseries CUDA, paralelismo de datos y comparación CPU vs GPU}
+\color{BodyGray}
+
+\makeatletter
+\renewcommand\section{\@startsection{section}{1}{0pt}
+  {-3.2ex plus -1ex minus -.2ex}
+  {1.5ex plus .2ex}
+  {\normalfont\Large\bfseries\color{ElectricBlue}}}
+\renewcommand\subsection{\@startsection{subsection}{2}{0pt}
+  {-2.5ex plus -1ex minus -.2ex}
+  {1ex plus .2ex}
+  {\normalfont\large\bfseries\color{DarkGray}}}
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{0pt}
+  {-2ex plus -1ex minus -.2ex}
+  {.8ex plus .2ex}
+  {\normalfont\normalsize\bfseries\color{ElectricBlue}}}
+\makeatother
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=ElectricBlue,
+  urlcolor=ElectricBlue,
+  citecolor=ElectricBlue,
+  pdftitle={Hoja de Trabajo 3 - CUDA, paralelismo de datos y rendimiento},
+  pdfauthor={Daniel Barillas},
+  pdfsubject={Computacion Paralela y Distribuida}
 }
-\author{
-    {\large Daniel Barillas} \\
-    {\large Carné: 22193} \\
-    {\large Sección: 40} \\
-    {\large Programación Paralela y Distribuida}
+
+\graphicspath{{report/imagenes/}{imagenes/}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{ElectricBlue}\textbf{HOJA DE TRABAJO 3}}
+\fancyhead[R]{\small\color{BodyGray}Computación Paralela y Distribuida}
+\fancyfoot[L]{\small\color{BodyGray}Daniel Barillas - 22193}
+\fancyfoot[R]{\small\color{ElectricBlue}\textbf{\thepage}}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{ElectricBlue}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\headheight}{22pt}
+
+\newtcolorbox{summarybox}{
+  colback=SoftBlue,
+  colframe=ElectricBlue,
+  boxrule=0.9pt,
+  arc=2mm,
+  left=4mm,right=4mm,top=3mm,bottom=3mm,
+  title=\textbf{Resumen ejecutivo},
+  coltitle=white,
+  colbacktitle=ElectricBlue
 }
-\date{\today}
+
+\newtcolorbox{resultbox}[1][]{
+  colback=SoftCyan,
+  colframe=NeonCyan,
+  boxrule=0.8pt,
+  arc=2mm,
+  left=4mm,right=4mm,top=3mm,bottom=3mm,
+  title=\textbf{#1},
+  coltitle=DarkGray,
+  colbacktitle=NeonCyan
+}
+
+\newtcolorbox{warningbox}[1][]{
+  colback=SoftGray,
+  colframe=WarningAmber,
+  boxrule=0.8pt,
+  arc=2mm,
+  left=4mm,right=4mm,top=3mm,bottom=3mm,
+  title=\textbf{#1},
+  coltitle=white,
+  colbacktitle=WarningAmber
+}
+
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\statusok}{\textcolor{SuccessGreen}{\textbf{Cumplido}}}
+\newcommand{\statuspending}{\textcolor{WarningAmber}{\textbf{Pendiente de medición}}}
 
 \begin{document}
+\hypersetup{pageanchor=false}
 
-\maketitle
-\thispagestyle{empty}
-\newpage
+\begin{titlepage}
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[DarkGray] (current page.north west) rectangle (current page.south east);
+    \fill[ElectricBlue] (current page.north west) rectangle
+      ([xshift=1.25cm]current page.south west);
+    \fill[NeonCyan] ([yshift=-5.25cm,xshift=1.25cm]current page.north west)
+      rectangle ([yshift=-5.33cm]current page.north east);
+    \draw[ElectricBlue,line width=1.4pt]
+      ([xshift=2.2cm,yshift=2.1cm]current page.south west) --
+      ([xshift=-2.2cm,yshift=2.1cm]current page.south east);
+  \end{tikzpicture}
 
-\begin{tcolorbox}[colback=softgray,colframe=uvgblue,title={\textbf{\color{uvgblue}Resumen ejecutivo}}]
-El laboratorio desarrollado en CUDA tuvo como objetivo analizar soluciones paralelas para tareas de cómputo intensivo, comparándolas con una implementación secuencial en CPU. Se abordaron tres actividades clave: suma vectorial, clasificación por umbral y medición de rendimiento.
-\end{tcolorbox}
+  \color{white}
+  \vspace*{1.6cm}
+  {\large\bfseries UNIVERSIDAD DEL VALLE DE GUATEMALA\par}
+  \vspace{0.25cm}
+  {\large Computación Paralela y Distribuida\par}
+  {\normalsize Docente: Marlon Fuentes\par}
 
-\section*{\color{uvgblue}Introducción}
-En la programación paralela, la GPU se utiliza para acelerar tareas en las que se pueden ejecutar muchas operaciones simultáneamente. Este documento analiza tres problemas fundamentales: suma de arreglos, clasificación por umbral y comparación de tiempos entre CPU y GPU.
+  \vspace{2.2cm}
+  {\color{NeonCyan}\Large\bfseries HOJA DE TRABAJO 3\par}
+  \vspace{0.5cm}
+  {\Huge\bfseries CUDA Y PARALELISMO\par}
+  \vspace{0.2cm}
+  {\Huge\bfseries DE DATOS\par}
+  \vspace{0.55cm}
+  {\Large Suma vectorial, clasificación por umbral y\par}
+  {\Large comparación de rendimiento CPU/GPU\par}
 
-La ejecución de un programa CUDA requiere más que una función kernel. Es necesario gestionar memoria, transferir datos entre host y device y sincronizar procesos para garantizar que el resultado final sea correcto y consistente.
+  \vfill
+  \begin{tabular}{@{}ll@{}}
+    \textcolor{NeonCyan}{\textbf{Estudiante}} & Daniel Barillas \\
+    \textcolor{NeonCyan}{\textbf{Carné}} & 22193 \\
+    \textcolor{NeonCyan}{\textbf{Sección}} & 40 \\
+    \textcolor{NeonCyan}{\textbf{Semestre indicado}} & 2, 2025 \\
+  \end{tabular}
+  \vspace{2.8cm}
+\end{titlepage}
 
-\section*{\color{uvgblue}Objetivos}
-\begin{itemize}[leftmargin=1.5em]
-    \item Comprender la diferencia entre CPU y GPU.
-    \item Implementar una suma de arreglos en paralelo usando CUDA.
-    \item Evaluar el impacto del cambio en el tamaño del grid y del block.
-    \item Analizar la importancia de reservar y liberar memoria correctamente.
-    \item Clasificar valores con respecto a un umbral definido.
-    \item Comparar tiempos de ejecución entre CPU y GPU.
-\end{itemize}
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\begingroup
+\footnotesize
+\setlength{\parskip}{0pt}
+\tableofcontents
+\endgroup
+\clearpage
+\pagenumbering{arabic}
 
-\section*{\color{uvgblue}Parte 1: Suma de arreglos en GPU}
-La suma de vectores es un ejemplo clásico de paralelismo de datos. Cada posición del arreglo de salida puede calcularse de forma independiente, por lo que la GPU puede dividir el trabajo entre millones de hilos.
+\begin{summarybox}
+Esta hoja de trabajo desarrolla tres competencias fundamentales de CUDA. La
+primera parte implementa una suma de arreglos en GPU y analiza la separación
+entre host y device. La segunda completa la plantilla \code{vacio.cu} para
+clasificar valores respecto de un umbral. La tercera construye una versión
+secuencial en CPU y un comparador reproducible CPU/GPU que distingue el tiempo
+del kernel del costo completo de transferencias. Las salidas disponibles
+validan numéricamente las Partes 1 y 2 y la línea base CPU. El comparador queda
+listo para ejecutarse en el equipo CUDA de entrega, sin sustituir mediciones
+reales por estimaciones.
+\end{summarybox}
 
-El kernel principal es:
+\section{Trazabilidad con el enunciado}
 
-\begin{lstlisting}[language=C++]
-__global__ void sumarArreglos(const int *A, const int *B, int *C, int N) {
+El enunciado oficial se conserva dentro del repositorio, junto con la plantilla
+original de la Parte 2. La Tabla~\ref{tab:trazabilidad} relaciona cada requisito
+con su evidencia.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.28\textwidth} X p{0.20\textwidth}}
+\toprule
+Requisito & Implementación & Estado \\
+\midrule
+Suma de A y B en GPU &
+\code{source/parte1_suma_cuda.cu}: memoria, copias, kernel e impresión &
+\statusok \\
+Respuestas de Parte 1 &
+Sección~\ref{sec:preguntas} de este informe y README &
+\statusok \\
+Completar \code{vacio.cu} &
+\code{source/vacio.cu}, contrastado con la plantilla original &
+\statusok \\
+Versión exclusivamente CPU &
+\code{source/parte3_cpu_vs_gpu.cpp} &
+\statusok \\
+Medición CPU y GPU &
+\code{source/parte3_comparacion_cpu_gpu.cu}, con eventos CUDA y reloj CPU &
+\statuspending \\
+Informe en PDF &
+Fuente LaTeX, capturas integradas y salida en \code{output/pdf} &
+\statusok \\
+No incluir ejecutables &
+\code{build/} excluido mediante \code{.gitignore} &
+\statusok \\
+\bottomrule
+\end{tabularx}
+\caption{Trazabilidad de requisitos y entregables.}
+\label{tab:trazabilidad}
+\end{table}
+
+\begin{warningbox}[Dato pendiente y criterio de honestidad]
+El equipo disponible durante la preparación final no expone \code{nvcc} ni una
+GPU NVIDIA en WSL. Por esa razón, los tiempos GPU nuevos no se inventan ni se
+extrapolan desde otra máquina. El código, los comandos y la tabla están listos;
+los valores se incorporarán a partir de
+\code{results/parte3_comparacion_cpu_gpu.txt} cuando se ejecute en el entorno
+CUDA usado para la entrega.
+\end{warningbox}
+
+\section{Fundamentos del modelo CUDA}
+
+Un programa CUDA combina dos espacios de ejecución. El \textit{host}, que
+corresponde a la CPU, coordina el programa y administra recursos. El
+\textit{device}, que corresponde a la GPU, ejecuta kernels sobre una gran
+cantidad de hilos. En esta actividad se usa memoria separada: un puntero host
+no sustituye a un puntero device y los datos deben transferirse de forma
+explícita.
+
+El índice global unidimensional se calcula mediante:
+
+\[
+  i = \texttt{blockIdx.x}\cdot\texttt{blockDim.x}
+      + \texttt{threadIdx.x}
+\]
+
+Cada hilo procesa un índice independiente. Como el número de hilos lanzados
+puede superar el número de datos, todos los kernels incluyen la condición
+\(\texttt{i < N}\).
+
+\subsection{Flujo general}
+
+\begin{enumerate}
+  \item Crear e inicializar datos en el host.
+  \item Reservar memoria device con \code{cudaMalloc}.
+  \item Copiar entradas mediante \code{cudaMemcpyHostToDevice}.
+  \item Calcular grid y block.
+  \item Lanzar el kernel.
+  \item comprobar el lanzamiento y sincronizar.
+  \item Copiar resultados mediante \code{cudaMemcpyDeviceToHost}.
+  \item Validar y liberar recursos.
+\end{enumerate}
+
+\section{Parte 1: suma de arreglos en GPU}
+
+\subsection{Objetivo y datos}
+
+La primera parte suma dos arreglos de \(N=16\) elementos. La inicialización es:
+
+\[
+  A[i] = i+1,\qquad B[i]=2i+3
+\]
+
+Por lo tanto, el valor esperado es:
+
+\[
+  C[i]=A[i]+B[i]=3i+4
+\]
+
+\subsection{Kernel}
+
+\begin{Verbatim}[frame=single,framesep=3mm,fontsize=\small,
+  rulecolor=\color{ElectricBlue},formatcom=\color{DarkGray}]
+__global__ void sumarArreglos(
+    const int *A, const int *B, int *C, int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
     if (idx < N) {
         C[idx] = A[idx] + B[idx];
     }
 }
-\end{lstlisting}
+\end{Verbatim}
 
-\subsection*{\color{accent}Flujo del programa}
-\begin{enumerate}[leftmargin=1.5em]
-    \item Se declaran los arreglos A y B en el host.
-    \item Se inicializan con valores definidos.
-    \item Se reserva memoria en el device para A, B y C.
-    \item Se copian A y B desde el host al device.
-    \item Se lanza el kernel con una configuración de grid y block.
-    \item Se sincroniza el dispositivo con `cudaDeviceSynchronize()`.
-    \item Se devuelve el resultado del device al host.
-    \item Se imprimen los valores finales.
-\end{enumerate}
+El programa usa bloques de ocho hilos y dos bloques. La condición de límites
+mantiene el kernel correcto incluso si se cambia a una configuración que lance
+más hilos que elementos.
 
-\subsection*{\color{accent}Preguntas clave}
-\textbf{1. ¿Qué partes se ejecutan en CPU y en GPU?}
-La mayor parte de la lógica de control del programa se ejecuta en la CPU. Allí se declaran y se inicializan los arreglos, se determina el tamaño de entrada, se invoca la reserva de memoria con `cudaMalloc`, se ejecutan las transferencias con `cudaMemcpy`, se verifica el estado del dispositivo y finalmente se imprimen los resultados. En contraste, la parte verdaderamente intensiva del cómputo se ejecuta en la GPU dentro del kernel `sumarArreglos`. Cada hilo toma una posición del arreglo, calcula el índice correspondiente y realiza la suma de los valores almacenados en `A[idx]` y `B[idx]`. Es decir, la CPU coordina y supervisa la ejecución, mientras la GPU realiza la operación paralela sobre muchos elementos al mismo tiempo.
+\subsection{Resultado observado}
 
-\textbf{2. ¿Qué pasa si cambia grid y block?}
-El valor de `grid` y `block` determina cuántos hilos se lanzan en paralelo. En una configuración adecuada, cada hilo procesa una posición distinta del arreglo y el trabajo se distribuye eficientemente entre los multiprocesadores de la GPU. Si se reduce el tamaño del bloque o se usa un grid demasiado pequeño, entonces el número total de hilos puede ser insuficiente para cubrir todos los elementos del arreglo. En ese caso, algunos índices quedan sin ser calculados y el resultado se vuelve incompleto. Por esa razón se usa la condición `if (idx < N)`, que garantiza que ningún hilo acceda a una posición fuera de rango dentro del vector. Además, si se modifica la configuración sin ajustar la cantidad de datos, el rendimiento puede disminuir y, en ocasiones, la salida puede ser incorrecta.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\textwidth,height=0.72\textheight,keepaspectratio]{parte-1.png}
+  \caption{Compilación y ejecución de la suma de arreglos en CUDA.}
+  \label{fig:parte1}
+\end{figure}
 
-\textbf{3. ¿Qué pasa si no se reserva memoria?}
-La reserva de memoria en el device es fundamental porque la GPU no puede operar directamente sobre los arreglos creados en el host. Si no se ejecuta `cudaMalloc`, los punteros del dispositivo no apuntan a memoria válida y el kernel puede intentar escribir en ubicaciones inexistentes. Esto provoca errores en tiempo de ejecución, resultados corruptos o incluso fallos del programa. Lo mismo ocurre si la memoria se libera incorrectamente antes de que el resultado sea copiado al host. En resumen, la gestión de memoria es requisito indispensable para la ejecución segura y correcta de cualquier programa CUDA.
+La Figura~\ref{fig:parte1} muestra \(C[0]=4\), \(C[1]=7\) y una progresión de
+tres unidades hasta \(C[15]=49\). Estos valores coinciden exactamente con
+\(3i+4\). La captura también evidencia la configuración \code{grid = 2} y
+\code{block = 8}, además del regreso de la salida al host.
 
-\textbf{4. ¿Qué pasa si no se transfiere el resultado del GPU al CPU?}
-Aunque el kernel realice el cálculo correcto en la GPU, el host no puede acceder a esos valores si no se ejecuta la operación de retorno `cudaMemcpy` desde el device hacia el host. En ese caso, el programa puede aparentar funcionar, pero el arreglo de salida en la CPU quedará sin información útil. Como consecuencia, no se pueden imprimir los resultados ni reutilizarlos para otra operación. La transferencia del resultado es lo que conecta el cómputo paralelo del dispositivo con la lógica de presentación y análisis del sistema operativo. Sin ella, la GPU trabaja de forma aislada y el usuario no obtiene ningún valor útil.
+\subsection{Respuestas requeridas}
+\label{sec:preguntas}
 
-\section*{\color{uvgblue}Parte 2: Clasificación por umbral}
-La segunda parte del trabajo consiste en clasificar cada valor de un arreglo con respecto a un umbral. La lógica es la siguiente:
+\subsubsection{¿Qué partes se ejecutan en CPU y cuáles en GPU?}
 
-$$
-resultado[i] =
-\begin{cases}
-1, & \text{si } entrada[i] \geq umbral \\
-0, & \text{si } entrada[i] < umbral
-\end{cases}
-$$
+La CPU ejecuta \code{main}, inicializa A y B, invoca \code{cudaMalloc}, ordena
+las copias, calcula la configuración de lanzamiento, verifica errores, imprime
+la salida y libera memoria. La GPU ejecuta únicamente el cuerpo del kernel:
+cada hilo calcula un índice y suma dos enteros.
 
-El kernel utilizado es:
+\subsubsection{¿Qué ocurre al cambiar grid y block?}
 
-\begin{lstlisting}[language=C++]
-__global__ void clasificarUmbral(const int *entrada, int *salida, int N, int umbral) {
+El total de hilos es \(\textit{gridSize}\times\textit{blockSize}\). Si es menor
+que \(N\), algunos elementos nunca se procesan. Si es mayor, la comprobación
+\code{idx < N} descarta los hilos sobrantes. El tamaño de bloque también afecta
+el rendimiento: bloques demasiado pequeños pueden desaprovechar recursos,
+mientras bloques muy grandes pueden reducir ocupación o exceder límites del
+dispositivo. Por ello se usa la división de techo:
+
+\[
+  \textit{gridSize} =
+  \left\lceil \frac{N}{\textit{blockSize}} \right\rceil
+\]
+
+\subsubsection{¿Qué ocurre si no se reserva o libera memoria?}
+
+Sin \code{cudaMalloc}, las direcciones device no son válidas y las copias o el
+kernel devuelven errores. Liberar memoria antes de terminar causa accesos
+inválidos. No liberarla al final produce una fuga que puede agotar la memoria
+de la GPU en ejecuciones repetidas.
+
+\subsubsection{¿Qué ocurre si no se transfiere el resultado a CPU?}
+
+El arreglo calculado permanece en \code{d_C}. \code{h_C} no se actualiza de
+forma automática porque host y device usan espacios de memoria distintos. Sin
+\code{cudaMemcpyDeviceToHost}, la CPU no dispone de los valores para
+imprimirlos o utilizarlos en otra operación.
+
+\section{Parte 2: clasificación por umbral}
+
+\subsection{Relación con la plantilla}
+
+La actividad solicita completar \code{vacio.cu}. El repositorio conserva dos
+versiones:
+
+\begin{itemize}
+  \item \code{docs/material_original/vacio_original.cu}: plantilla intacta;
+  \item \code{source/vacio.cu}: solución completada y entregable.
+\end{itemize}
+
+También se mantiene \code{parte2_umbral_clasificacion.cu}, una variante con
+mensajes de diagnóstico, y \code{umbralizar.cu}, cuyo vocabulario sigue de
+cerca al archivo original.
+
+\subsection{Regla de clasificación}
+
+Para \(N=32\), el arreglo contiene \(0,5,10,\ldots,155\). La salida se define:
+
+\[
+ salida[i] =
+ \begin{cases}
+  1, & entrada[i] \ge 50\\
+  0, & entrada[i] < 50
+ \end{cases}
+\]
+
+\begin{Verbatim}[frame=single,framesep=3mm,fontsize=\small,
+  rulecolor=\color{ElectricBlue},formatcom=\color{DarkGray}]
+__global__ void clasificarUmbral(
+    const int *entrada, int *salida, int N, int umbral) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
     if (idx < N) {
         salida[idx] = (entrada[idx] >= umbral) ? 1 : 0;
     }
 }
-\end{lstlisting}
+\end{Verbatim}
 
-Esta estrategia es útil porque cada valor puede evaluarse de forma independiente, utilizando el modelo de paralelismo de datos.
+\subsection{Resultados}
 
-\subsection*{\color{accent}Ejemplo de salida esperada}
-\begin{verbatim}
-Umbral = 50
-in[ 0] =   0  -> out[ 0] = 0
-in[ 1] =   5  -> out[ 1] = 0
-...
-in[ 9] =  45  -> out[ 9] = 0
-in[10] =  50  -> out[10] = 1
-in[11] =  55  -> out[11] = 1
-...
-in[31] = 155  -> out[31] = 1
-Finalizado (host).
-\end{verbatim}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.96\textwidth,height=0.70\textheight,keepaspectratio]{parte-2.png}
+  \caption{Ejecución de la clasificación por umbral con mensajes de diagnóstico.}
+  \label{fig:parte2}
+\end{figure}
 
-\section*{\color{uvgblue}Parte 3: Versión CPU y medición de tiempos}
-La comparación entre CPU y GPU permite evaluar el rendimiento real de cada plataforma. En la versión CPU, la implementación se hace con un ciclo `for`, mientras que la imagen del problema se procesa en paralelo en forma de GPU.
+La Figura~\ref{fig:parte2} confirma que los índices 0 a 9, cuyos valores son
+menores que 50, producen cero. El índice 10 contiene 50 y produce uno; todos
+los índices restantes mantienen esa clasificación.
 
-\begin{lstlisting}[language=C++]
-std::vector<int> sumaCPU(const std::vector<int>& A, const std::vector<int>& B) {
-    std::vector<int> C(A.size());
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.96\textwidth,height=0.70\textheight,keepaspectratio]{Archivo_vacío_Ejecución.png}
+  \caption{Ejecución de la plantilla \code{vacio.cu} después de completarla.}
+  \label{fig:vacio}
+\end{figure}
 
-    for (size_t i = 0; i < A.size(); ++i) {
+La Figura~\ref{fig:vacio} valida específicamente el archivo solicitado por el
+enunciado. Ambas implementaciones producen la misma secuencia, lo que elimina
+la ambigüedad sobre cuál condición de umbral se usó.
+
+\section{Parte 3: versión CPU y comparación de tiempos}
+
+\subsection{Versión exclusivamente CPU}
+
+El archivo \code{parte3_cpu_vs_gpu.cpp} implementa la misma suma mediante un
+ciclo secuencial. El vector de salida se calcula así:
+
+\begin{Verbatim}[frame=single,framesep=3mm,fontsize=\small,
+  rulecolor=\color{ElectricBlue},formatcom=\color{DarkGray}]
+void sumarArreglosCPU(
+    const std::vector<int>& A,
+    const std::vector<int>& B,
+    std::vector<int>& C) {
+    for (std::size_t i = 0; i < A.size(); ++i) {
         C[i] = A[i] + B[i];
     }
-
-    return C;
 }
-\end{lstlisting}
-
-La medición del tiempo se realiza con `std::chrono`:
-
-\begin{lstlisting}[language=C++]
-auto inicioCPU = std::chrono::high_resolution_clock::now();
-std::vector<int> C = sumaCPU(A, B);
-auto finCPU = std::chrono::high_resolution_clock::now();
-
-auto duracionCPU = std::chrono::duration_cast<std::chrono::microseconds>(finCPU - inicioCPU).count();
-\end{lstlisting}
-
-\subsection*{\color{accent}Interpretación}
-En problemas grandes, la GPU suele superar a la CPU porque cada hilo realiza una pequeña parte del trabajo al mismo tiempo. Esta diferencia es precisamente la base del cómputo paralelo.
-
-\subsection*{\color{accent}Programa 1: suma de arreglos en CUDA}
-\textbf{Descripción:} Este programa implementa una suma vectorial típica en CUDA, en la cual cada hilo calcula una posición distinta del arreglo de salida. La operación es completamente paralela y se aprovecha la arquitectura masiva de hilos que ofrece la GPU.
-
-\textbf{Objetivo:} Verificar que la memoria del dispositivo se gestione de forma correcta, que el kernel ejecute la suma de manera simultánea y que el resultado final se retorne al host sin perder precisión ni integridad.
+\end{Verbatim}
 
 \begin{figure}[H]
-    \centering
-    \fbox{\parbox[c][4.8cm][c]{0.9\linewidth}{\centering \textbf{[INSERTAR CAPTURA 1: salida del programa de suma CUDA]}\\[0.5em] \small Reemplazar este espacio con la captura de la terminal mostrando A, B y C.}}
-    \caption{Salida del programa de suma de arreglos en CUDA.}
+  \centering
+  \includegraphics[width=0.96\textwidth,height=0.48\textheight,keepaspectratio]{parte-3.png}
+  \caption{Evidencia histórica de la versión CPU: 2\,787 microsegundos para un millón de elementos.}
+  \label{fig:cpu}
 \end{figure}
 
-\textbf{Análisis del resultado:} El resultado final del programa corresponde a la suma elemento a elemento de los arreglos A y B, demostrando que la transferencia host-device y la ejecución del kernel fueron correctas. La salida muestra valores como 4, 7, 10, 13, etc., lo cual confirma que cada hilo accedió a la posición correcta del vector, sin sobreescribir información ni producir errores de sincronización. Este ejercicio demuestra la utilidad del intensivo paralelismo de datos y la forma en que CUDA distribuye el cálculo entre muchísimos hilos.
+La Figura~\ref{fig:cpu} valida la versión secuencial y sus primeros valores
+\(4,7,10,13,16\). Ese tiempo es una línea base histórica y no se compara con
+la nueva versión GPU porque el tamaño del problema y la ejecución no son los
+mismos.
 
-\textbf{Observaciones:} La clave del ejercicio es que cada hilo calcula una posición del arreglo y no necesita depender del resultado de otros hilos para obtener su valor. Esto hace que el problema sea ideal para la GPU, porque el cálculo es independiente para cada índice.
+\subsection{Diseño de la comparación justa}
 
-\subsection*{\color{accent}Programa 2: clasificación por umbral}
-\textbf{Descripción:} Este segundo programa toma un conjunto de valores enteros y determina si cada número es menor o mayor que un umbral definido. La salida del kernel es binaria: 1 si el elemento cumple la condición y 0 si no la cumple.
+El nuevo archivo \code{parte3_comparacion_cpu_gpu.cu} ejecuta CPU y GPU sobre
+los mismos 8\,388\,608 elementos. Reserva los vectores de salida antes de
+medir, realiza un calentamiento CUDA y comprueba todos los resultados.
 
-\textbf{Objetivo:} Aplicar el modelo de paralelismo de datos a una tarea de clasificación lógica y comprobar que cada valor se evalúa de forma independiente en la GPU.
+Se informan dos tiempos GPU:
 
-\begin{figure}[H]
-    \centering
-    \fbox{\parbox[c][4.8cm][c]{0.9\linewidth}{\centering \textbf{[INSERTAR CAPTURA 2: salida del programa de clasificación por umbral]}\\[0.5em] \small Reemplazar este espacio con la captura de la consola mostrando in[i] y out[i].}}
-    \caption{Resultado de la clasificación binaria por umbral.}
-\end{figure}
+\begin{enumerate}
+  \item \textbf{Solo kernel}: medido mediante \code{cudaEventRecord}; representa
+  el cálculo en el dispositivo.
+  \item \textbf{Extremo a extremo}: incluye las copias H2D, el kernel y la copia
+  D2H; excluye \code{cudaMalloc} y \code{cudaFree}.
+\end{enumerate}
 
-\textbf{Análisis del resultado:} La salida muestra que todos los valores menores a 50 reciben 0, mientras que los elementos iguales o mayores a 50 reciben 1. Esto refleja correctamente la condición lógica `entrada[idx] >= umbral`. La clasificación se realiza sin dependencias entre elementos, por lo cual es una operación muy adecuada para CUDA. La validación final del programa confirma que el kernel, la transferencia de datos y la sincronización del dispositivo fueron correctas.
+Esta separación evita una conclusión engañosa. Una GPU puede ejecutar el
+kernel rápidamente y, aun así, perder ventaja si el problema es pequeño o las
+transferencias dominan el costo total.
 
-\textbf{Observaciones:} Este ejercicio es especialmente útil para entender la lógica de decisiones paralelas. En lugar de evaluar los valores de forma secuencial, la GPU procesa cada caso al mismo tiempo, lo cual es muy eficiente cuando se requiere revisar grandes volúmenes de datos.
+\subsection{Tabla preparada para la medición}
 
-\subsection*{\color{accent}Programa 3: versión CPU y medición de tiempos}
-\textbf{Descripción:} La versión CPU del problema suma los elementos de ambos arreglos de manera secuencial, utilizando una función que recorre el vector en un solo hilo. Luego se mide el tiempo de ejecución para comparar el rendimiento con la variante paralela.
+\begin{table}[H]
+\centering
+\begin{tabularx}{0.92\textwidth}{X >{\raggedleft\arraybackslash}p{0.34\textwidth}}
+\toprule
+\textbf{Métrica} & \textbf{Resultado} \\
+\midrule
+Cantidad de elementos & 8\,388\,608 \\
+Tiempo CPU & Pendiente de ejecución CUDA \\
+Tiempo GPU, solo kernel & Pendiente de ejecución CUDA \\
+Tiempo GPU, H2D + kernel + D2H & Pendiente de ejecución CUDA \\
+Aceleración, solo kernel & Pendiente de ejecución CUDA \\
+Aceleración extremo a extremo & Pendiente de ejecución CUDA \\
+Discrepancias CPU/GPU & Debe ser 0 \\
+\bottomrule
+\end{tabularx}
+\caption{Campos que se completarán con la salida del comparador.}
+\label{tab:tiempos}
+\end{table}
 
-\textbf{Objetivo:} Cuantificar la diferencia entre un enfoque secuencial y un enfoque paralelo, y evaluar cómo la GPU puede acelerar tareas repetitivas sobre arreglos grandes.
+\begin{resultbox}[Comando para producir los datos]
+\begin{Verbatim}[fontsize=\small]
+bash scripts/verificar_entorno.sh
+bash scripts/compilar.sh
+\end{Verbatim}
 
-\begin{figure}[H]
-    \centering
-    \fbox{\parbox[c][4.8cm][c]{0.9\linewidth}{\centering \textbf{[INSERTAR CAPTURA 3: comparación de tiempo de CPU vs GPU]}\\[0.5em] \small Reemplazar este espacio con la imagen que muestre el tiempo de ejecución y la salida del programa.}}
-    \caption{Medición de rendimiento de la versión CPU.}
-\end{figure}
+La salida relevante se guarda en:
+\code{results/parte3_comparacion_cpu_gpu.txt}.
+\end{resultbox}
 
-\textbf{Análisis del resultado:} En arreglos grandes, la CPU tarda más porque debe recorrer cada elemento uno por uno. La GPU, por su parte, puede ejecutar muchas operaciones simultáneamente. Este tipo de comparación es una herramienta muy útil para justificar el uso de CUDA en problemas con gran cantidad de datos. Aunque la CPU sigue siendo importante para lógica de control y tareas secuenciales, la GPU muestra una ventaja clara cuando el problema es naturalmente paralelo.
+\section{Validación integral}
 
-\textbf{Observaciones:} La medición de tiempo con `std::chrono` permite cuantificar la diferencia de rendimiento de manera objetiva. Esto ayuda a transformar una observación conceptual del paralelismo en una evidencia real, útil tanto para análisis académico como para decisiones de diseño de software.
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{p{0.18\textwidth} X p{0.22\textwidth}}
+\toprule
+\textbf{Parte} & \textbf{Criterio} & \textbf{Resultado} \\
+\midrule
+Parte 1 &
+\(C[i]=3i+4\) para los 16 elementos &
+\statusok \\
+Parte 2 &
+0 para valores menores que 50 y 1 desde 50 &
+\statusok \\
+CPU &
+Primeros valores 4, 7, 10, 13 y 16; verificación completa &
+\statusok \\
+CPU/GPU &
+Mismos datos y cero discrepancias &
+\statuspending \\
+Memoria &
+Reserva, copia, sincronización y liberación comprobadas &
+\statusok \\
+\bottomrule
+\end{tabularx}
+\caption{Resumen de validación funcional.}
+\end{table}
 
-\section*{\color{uvgblue}Conclusiones}
-La programación con CUDA permite resolver problemas de gran escala de una forma mucho más eficiente cuando el cálculo puede dividirse en tareas independientes. La GPU no reemplaza por completo a la CPU, sino que complementa su rendimiento en problemas de naturaleza masivamente paralela.
+La revisión del código añadió comprobaciones explícitas al retorno de
+\code{cudaDeviceSynchronize}. Esto evita anunciar que un kernel terminó
+correctamente cuando el lanzamiento fue válido, pero ocurrió un error durante
+su ejecución.
 
-La correcta transferencia de memoria, la administración del device y la definición de grid/block son pasos esenciales para lograr programas correctos y rápidos. En conjunto, este trabajo demuestra cómo una operación aparentemente simple puede convertirse en un ejercicio completo de diseño paralelo, análisis de rendimiento y validación de resultados.
+\section{Reproducibilidad y limitaciones}
+
+\subsection{Reproducibilidad}
+
+El script \code{scripts/compilar.sh} compila y ejecuta todos los programas.
+Cada salida se conserva como texto en \code{results/}. Los ejecutables se
+guardan en \code{build/}, directorio excluido de la entrega para respetar la
+instrucción de no entregar binarios.
+
+\subsection{Factores que afectan el tiempo}
+
+Los tiempos dependen del procesador, modelo de GPU, versión del controlador,
+frecuencias, temperatura, procesos concurrentes y optimizaciones del
+compilador. Por ello:
+
+\begin{itemize}
+  \item no se comparan capturas obtenidas con tamaños diferentes;
+  \item no se trasladan tiempos desde otro equipo;
+  \item se documenta qué operaciones incluye cada medición;
+  \item se valida corrección antes de interpretar velocidad.
+\end{itemize}
+
+\subsection{Fecha del documento}
+
+El enunciado indica simultáneamente “Semestre 2, 2025” y “miércoles 21 de
+octubre”. El informe conserva el semestre declarado y evita generar una fecha
+automática con \code{\textbackslash today}, que podría introducir un año ajeno
+a la actividad.
+
+\section{Conclusiones}
+
+La suma vectorial demuestra un caso de paralelismo de datos directo: cada hilo
+trabaja sobre un elemento y no necesita comunicarse con otros hilos. Los
+resultados \(4,7,10,\ldots,49\) confirman que la indexación, las transferencias
+y el kernel son correctos.
+
+La clasificación por umbral consolida el mismo patrón con una decisión
+independiente por dato. La transición exacta en 50 valida la condición
+\code{entrada[idx] >= umbral} y demuestra que la plantilla original fue
+completada de acuerdo con el enunciado.
+
+La Parte 3 distingue correctamente entre demostrar paralelismo y demostrar
+rendimiento. No basta afirmar que una GPU es más rápida: deben usarse los
+mismos datos, establecer los límites temporales y comprobar la salida. El
+comparador implementado mide por separado el kernel y el ciclo completo,
+permitiendo analizar tanto capacidad de cálculo como costo de comunicación.
+
+En conjunto, la actividad evidencia el ciclo completo de una aplicación CUDA:
+preparación en CPU, administración explícita de memoria, distribución en
+hilos, sincronización, retorno de datos y validación. La única evidencia
+pendiente es la medición específica de hardware, que debe obtenerse en el
+equipo CUDA y colocarse en la Tabla~\ref{tab:tiempos}.
+
+\appendix
+\section{Archivos principales}
+
+\footnotesize
+\begin{tabularx}{\textwidth}{p{0.43\textwidth} X}
+\toprule
+\normalfont\textbf{Archivo} & \textbf{Propósito} \\
+\midrule
+\code{source/parte1_suma_cuda.cu} & Suma paralela y respuestas de Parte 1 \\
+\code{source/vacio.cu} & Plantilla de Parte 2 completada \\
+\code{source/parte2_umbral_clasificacion.cu} & Variante documentada del umbral \\
+\code{source/parte3_cpu_vs_gpu.cpp} & Versión exclusivamente CPU \\
+\code{source/parte3_comparacion_cpu_gpu.cu} & Benchmark CPU/GPU justo \\
+\code{scripts/verificar_entorno.sh} & Verificación de compiladores y GPU \\
+\code{scripts/compilar.sh} & Compilación, ejecución y captura de resultados \\
+\code{docs/ENUNCIADO.md} & Transcripción del enunciado \\
+\code{docs/VALIDACION.md} & Procedimiento de reproducción \\
+\bottomrule
+\end{tabularx}
+\normalsize
+
+\section{Comandos mínimos para completar la medición}
+
+\begin{Verbatim}[frame=single,framesep=3mm,fontsize=\small,
+  rulecolor=\color{ElectricBlue},formatcom=\color{DarkGray}]
+cd /ruta/al/repositorio
+bash scripts/verificar_entorno.sh
+bash scripts/compilar.sh
+cat results/parte3_comparacion_cpu_gpu.txt
+\end{Verbatim}
 
 \end{document}

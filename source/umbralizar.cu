@@ -65,7 +65,15 @@ int main() {
         return -1;
     }
 
-    cudaDeviceSynchronize();
+    err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        std::printf("Error durante la ejecucion del kernel: %s\n", cudaGetErrorString(err));
+        cudaFree(d_in);
+        cudaFree(d_out);
+        delete[] h_in;
+        delete[] h_out;
+        return -1;
+    }
 
     err = cudaMemcpy(h_out, d_out, N * sizeof(int), cudaMemcpyDeviceToHost);
     if (err != cudaSuccess) {

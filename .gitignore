@@ -37,7 +37,6 @@
 build/
 bin/
 out/
-results/*.txt
 results/*.log
 
 # --- Archivos del sistema ---
@@ -52,10 +51,18 @@ source/umbralizar
 source/*.out
 report/*.aux
 report/*.log
-report/*.pdf
 report/*.out
 report/*.toc
 report/*.synctex.gz
 report/*.fdb_latexmk
 report/*.fls
 report/*.xdv
+
+# --- Auxiliares de LaTeX en el directorio de salida ---
+output/pdf/*.aux
+output/pdf/*.log
+output/pdf/*.out
+output/pdf/*.toc
+output/pdf/*.fls
+output/pdf/*.fdb_latexmk
+output/pdf/*.synctex.gz

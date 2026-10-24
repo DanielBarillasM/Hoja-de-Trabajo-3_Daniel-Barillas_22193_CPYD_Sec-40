@@ -89,7 +89,15 @@ int main() {
         return -1;
     }
 
-    cudaDeviceSynchronize();
+    err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        std::printf(ANSI_RED "[ERROR] El kernel fallo durante la ejecucion: %s\n" ANSI_RESET, cudaGetErrorString(err));
+        cudaFree(d_entrada);
+        cudaFree(d_salida);
+        delete[] h_entrada;
+        delete[] h_salida;
+        return -1;
+    }
     std::printf(ANSI_GREEN "[OK] El kernel completó la clasificación.\n" ANSI_RESET);
 
     // Copia del resultado del device al host.

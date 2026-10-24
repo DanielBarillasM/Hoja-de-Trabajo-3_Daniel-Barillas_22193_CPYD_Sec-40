@@ -1,8 +1,7 @@
 #include <cstdio>
 #include <cuda_runtime.h>
 
-// Programa base para completar con la lógica de clasificación por umbral.
-// Este archivo sirve como plantilla de actividad para consolidar el ejercicio.
+// Solucion completada a partir de la plantilla vacio.cu proporcionada.
 
 __global__ void clasificarUmbral(const int *entrada, int *salida, int N, int umbral) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -69,7 +68,15 @@ int main() {
         return -1;
     }
 
-    cudaDeviceSynchronize();
+    err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        std::printf("Error durante la ejecucion del kernel: %s\n", cudaGetErrorString(err));
+        cudaFree(d_entrada);
+        cudaFree(d_salida);
+        delete[] h_entrada;
+        delete[] h_salida;
+        return -1;
+    }
 
     err = cudaMemcpy(h_salida, d_salida, N * sizeof(int), cudaMemcpyDeviceToHost);
     if (err != cudaSuccess) {

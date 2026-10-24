@@ -1,225 +1,262 @@
-> # Hoja de Trabajo 3 — Programación Paralela y Distribuida
+# Hoja de Trabajo 3 · CUDA y paralelismo de datos
 
 <p align="center">
-  <img src="https://img.shields.io/badge/CUDA-Enabled-76B900?style=for-the-badge&logo=nvidia" alt="CUDA" />
-  <img src="https://img.shields.io/badge/WSL-2-0078D4?style=for-the-badge&logo=windows" alt="WSL 2" />
-  <img src="https://img.shields.io/badge/Language-C%2B%2B-00599C?style=for-the-badge&logo=c%2B%2B" alt="C++" />
-  <img src="https://img.shields.io/badge/Status-Completed-2ECC71?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/CUDA-C%2B%2B-0066FF?style=for-the-badge&logo=nvidia&logoColor=white" alt="CUDA C++" />
+  <img src="https://img.shields.io/badge/Plataforma-WSL%202-1E1E1E?style=for-the-badge&logo=linux&logoColor=00FFFF" alt="WSL 2" />
+  <img src="https://img.shields.io/badge/Estado-Listo%20para%20medir-0066FF?style=for-the-badge" alt="Listo para medir" />
 </p>
 
+<p align="center">
+  Implementación, análisis y documentación de suma vectorial, clasificación
+  por umbral y comparación de rendimiento entre CPU y GPU.
+</p>
+
+---
+
 ## Información académica
-- Universidad: Universidad del Valle de Guatemala
-- Curso: Programación Paralela y Distribuida
-- Sección: 40
-- Estudiante: Daniel Barillas
-- Carné: 22193
-- Fecha de entrega: Miércoles 21 de octubre
-- Tema: CUDA, paralelismo de datos, memorización y análisis de rendimiento
 
----
+| Campo | Información |
+|---|---|
+| Universidad | Universidad del Valle de Guatemala |
+| Curso | Computación Paralela y Distribuida |
+| Docente | Marlon Fuentes |
+| Estudiante | Daniel Barillas |
+| Carné | 22193 |
+| Sección | 40 |
+| Semestre indicado | 2, 2025 |
+| Actividad | Hoja de Trabajo #3 |
 
-## Descripción general
-Este proyecto presenta tres actividades fundamentales de programación paralela con CUDA:
+El [enunciado original](docs/material_original/Hoja_de_Trabajo_3.pdf) y su
+[transcripción navegable](docs/ENUNCIADO.md) están incluidos para que pueda
+verificarse la relación entre requisitos y entregables.
 
-1. Suma de dos arreglos en paralelo usando GPU.
-2. Clasificación por umbral con un kernel CUDA.
-3. Comparación de rendimiento entre CPU y GPU usando medición de tiempo.
+## Contenido
 
-La finalidad es comprender cómo se ejecutan operaciones en el host y en el device, cómo se administra la memoria y cómo el paralelismo cambia el tiempo de cómputo en soluciones reales.
+- [Cumplimiento del enunciado](#cumplimiento-del-enunciado)
+- [Estructura](#estructura)
+- [Parte 1: suma CUDA](#parte-1-suma-de-arreglos-en-cuda)
+- [Parte 2: clasificación](#parte-2-clasificación-por-umbral)
+- [Parte 3: CPU frente a GPU](#parte-3-comparación-cpu-frente-a-gpu)
+- [Ejecución](#compilación-y-ejecución)
+- [Metodología](#metodología-de-medición)
+- [Informe](#informe)
 
----
+## Cumplimiento del enunciado
 
-## Objetivos del laboratorio
-- Entender la diferencia entre CPU y GPU.
-- Reservar memoria en el device con `cudaMalloc`.
-- Transferir datos entre host y device con `cudaMemcpy`.
-- Ejecutar kernels en CUDA.
-- Analizar el efecto de cambiar `grid` y `block`.
-- Comprender qué pasa si falta memoria o si no se devuelve el resultado al host.
-- Medir y comparar tiempos de ejecución entre CPU y GPU.
+| Requisito | Implementación | Evidencia |
+|---|---|---|
+| Arreglos A y B en host | `parte1_suma_cuda.cu` | Captura y salida completa |
+| Memoria en device | `cudaMalloc` para A, B y C | Errores CUDA comprobados |
+| Copia host → device | `cudaMemcpyHostToDevice` | Código y mensajes de ejecución |
+| Kernel de suma | `sumarArreglos` | `C[i] = A[i] + B[i]` |
+| Copia device → host | `cudaMemcpyDeviceToHost` | Valores impresos |
+| Respuestas conceptuales | README e informe | Análisis de Parte 1 |
+| Completar `vacio.cu` | `source/vacio.cu` | Umbral 50 validado |
+| Versión solo CPU | `parte3_cpu_vs_gpu.cpp` | Suma secuencial y tiempo CPU |
+| Medir CPU y GPU | `parte3_comparacion_cpu_gpu.cu` | Dos métricas GPU y validación |
+| Informe PDF | `output/pdf/informe_ht3.pdf` | Documento con capturas |
+| No incluir ejecutables | `build/` está ignorado | Solo fuentes y documentación |
 
----
+## Estructura
 
-## Estructura del repositorio
 ```text
-Hoja-de-Trabajo-3_Daniel-Barillas_22193_CPYD_Sec-40/
+.
 ├── README.md
 ├── LICENSE
-├── .gitignore
+├── docs/
+│   ├── ENUNCIADO.md
+│   ├── VALIDACION.md
+│   └── material_original/
+│       ├── Hoja_de_Trabajo_3.pdf
+│       └── vacio_original.cu
 ├── source/
 │   ├── parte1_suma_cuda.cu
 │   ├── parte2_umbral_clasificacion.cu
 │   ├── vacio.cu
+│   ├── umbralizar.cu
 │   ├── parte3_cpu_vs_gpu.cpp
-│   └── umbralizar.cu
+│   └── parte3_comparacion_cpu_gpu.cu
 ├── scripts/
-│   └── compilar.sh
+│   ├── compilar.sh
+│   └── verificar_entorno.sh
 ├── report/
-│   └── informe_ht3.tex
-├── results/
-│   ├── parte1_suma_cuda.txt
-│   ├── parte2_umbral_clasificacion.txt
-│   └── parte3_cpu_vs_gpu.txt
-├── build/
-└── .vscode/
+│   ├── informe_ht3.tex
+│   └── imagenes/
+├── output/pdf/
+└── results/
 ```
 
----
+`build/` se genera localmente y no forma parte de la entrega.
 
-## Requisitos del entorno
-- WSL 2 con Ubuntu
-- GPU NVIDIA compatible con CUDA
-- Driver NVIDIA actualizado
-- CUDA Toolkit habilitado en WSL
-- Compiladores: `nvcc` y `g++`
+## Parte 1: suma de arreglos en CUDA
 
----
+Archivo: [`source/parte1_suma_cuda.cu`](source/parte1_suma_cuda.cu).
 
-## Parte 1: Suma de dos arreglos en CUDA
-### Archivo
-- `source/parte1_suma_cuda.cu`
+El host crea dos arreglos de 16 elementos:
 
-### ¿Qué hace este programa?
-Este ejercicio realiza la suma elemento a elemento de dos arreglos:
+```text
+A[i] = i + 1
+B[i] = 2*i + 3
+```
 
-- Declara los arreglos `A` y `B` en host
-- Inicializa ambos con valores fijos
-- Reserva memoria en el device
-- Copia A y B al GPU
-- Ejecuta un kernel que calcula `C[i] = A[i] + B[i]`
-- Copia el resultado al host y lo imprime en pantalla
+Cada hilo calcula un elemento independiente:
 
-### Código central
 ```cpp
 __global__ void sumarArreglos(const int *A, const int *B, int *C, int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
     if (idx < N) {
         C[idx] = A[idx] + B[idx];
     }
 }
 ```
 
-### Respuestas a las preguntas
-#### 1. ¿Qué partes del código ejecutan CPU y GPU?
-- CPU:
-  - inicialización de arreglos
-  - `cudaMalloc`
-  - `cudaMemcpy`
-  - impresión final
-  - liberación de memoria
-- GPU:
-  - el kernel `sumarArreglos`
-  - el cálculo real de cada elemento
-  - el procesamiento paralelo de cada hilo
+El resultado esperado es `C[i] = 3*i + 4`: `4, 7, 10, 13, ..., 49`.
 
-#### 2. ¿Qué pasa si cambia grid y block?
-Si cambias el tamaño del `block` o del `grid`, cambias la distribución del trabajo.
+### Respuestas solicitadas
 
-- `block` pequeño ⇒ requiere más bloques
-- `block` grande ⇒ puede saturar mejor el multiprocesador
-- si `grid * block < N`, algunos elementos quedan sin procesar
-- por eso se usa `if (idx < N)` para evitar accesos fuera de límites
+#### ¿Qué se ejecuta en CPU y qué se ejecuta en GPU?
 
-#### 3. ¿Qué pasa si no se reserva memoria antes o después del kernel?
-- sin `cudaMalloc`, el programa intenta escribir en memoria inválida
-- el kernel falla o genera resultados incorrectos
-- sin liberar memoria, aparecen fugas de memoria y consumo innecesario del sistema
+La CPU inicializa los arreglos, solicita memoria del dispositivo, ordena las
+copias, configura y lanza el kernel, recupera la salida y la imprime. La GPU
+ejecuta `sumarArreglos`: cada hilo calcula su índice global y realiza una suma.
+Las llamadas `cudaMalloc` y `cudaMemcpy` son invocadas por el host.
 
-#### 4. ¿Qué pasa si no se transfiere el resultado del GPU al CPU?
-El cálculo se hace en la GPU, pero el host no tiene acceso al resultado. Entonces:
-- no puedes imprimirlo
-- el arreglo en host queda sin actualizar
-- los valores en CPU pueden quedarse en estado viejo o indefinido
+#### ¿Qué ocurre al cambiar grid y block?
 
----
+`gridSize * blockSize` determina cuántos hilos se crean. Si es menor que `N`,
+quedan elementos sin procesar. Si es mayor, `idx < N` impide accesos fuera del
+arreglo. Un bloque más grande no garantiza más velocidad: también influyen los
+límites de hilos, registros, memoria compartida y ocupación.
 
-## Parte 2: Clasificación por umbral
-### Archivos
-- `source/parte2_umbral_clasificacion.cu`
-- `source/vacio.cu`
+La división de techo cubre todos los elementos:
 
-### ¿Qué hace este programa?
-Genera un arreglo de 32 elementos con valores `0, 5, 10, ..., 155` y luego clasifica cada valor según un umbral definido.
+```cpp
+int gridSize = (N + blockSize - 1) / blockSize;
+```
 
-La regla lógica es:
+#### ¿Qué ocurre si no se administra correctamente la memoria?
+
+Sin `cudaMalloc`, los punteros del device no representan almacenamiento válido
+y las copias o el kernel fallan. Liberar memoria antes de terminar provoca
+accesos inválidos; no liberarla después produce fugas de memoria.
+
+#### ¿Qué ocurre si no se copia el resultado a CPU?
+
+`d_C` y `h_C` pertenecen a espacios diferentes. Sin una copia
+`DeviceToHost`, el resultado permanece en la GPU y el host no puede imprimirlo
+ni reutilizarlo como un arreglo actualizado.
+
+## Parte 2: clasificación por umbral
+
+La solución requerida está en [`source/vacio.cu`](source/vacio.cu). La
+plantilla original se conserva en
+[`docs/material_original/vacio_original.cu`](docs/material_original/vacio_original.cu).
+
+Para `N = 32`, `entrada[i] = 5*i` y `UMBRAL = 50`:
+
 ```cpp
 salida[idx] = (entrada[idx] >= umbral) ? 1 : 0;
 ```
 
-Esto significa:
-- si el valor es mayor o igual al umbral, guarda `1`
-- si es menor, guarda `0`
+Los valores de 0 a 45 producen `0`; desde 50 hasta 155 producen `1`.
+`parte2_umbral_clasificacion.cu` ofrece la misma solución con mensajes
+explicativos y `umbralizar.cu` conserva nombres próximos a la plantilla.
 
-### Resultado esperado
-Con umbral `50`, se espera:
-- `0` para números menores a 50
-- `1` para números mayores o iguales a 50
+## Parte 3: comparación CPU frente a GPU
 
-Ejemplo:
-```text
-Umbral = 50
-in[ 0] =   0  -> out[ 0] = 0
-in[ 9] =  45  -> out[ 9] = 0
-in[10] =  50  -> out[10] = 1
-in[31] = 155  -> out[31] = 1
-```
+La Parte 3 se divide en dos archivos para evidenciar ambos requisitos:
 
----
+- [`parte3_cpu_vs_gpu.cpp`](source/parte3_cpu_vs_gpu.cpp): versión
+  exclusivamente CPU.
+- [`parte3_comparacion_cpu_gpu.cu`](source/parte3_comparacion_cpu_gpu.cu):
+  comparación sobre los mismos 8,388,608 elementos.
 
-## Parte 3: Versión CPU y medición del tiempo
-### Archivo
-- `source/parte3_cpu_vs_gpu.cpp`
+El comparador informa:
 
-### ¿Qué hace?
-Se implementa la versión CPU de la suma de arreglos y se mide el tiempo de ejecución con `std::chrono`.
+1. tiempo CPU con `std::chrono::steady_clock`;
+2. tiempo exclusivo del kernel mediante eventos CUDA;
+3. tiempo GPU extremo a extremo (`H2D + kernel + D2H`);
+4. aceleración respecto de CPU;
+5. validación elemento por elemento.
 
-### Código de medición
-```cpp
-auto inicioCPU = std::chrono::high_resolution_clock::now();
-std::vector<int> C = sumaCPU(A, B);
-auto finCPU = std::chrono::high_resolution_clock::now();
-
-auto duracionCPU = std::chrono::duration_cast<std::chrono::microseconds>(finCPU - inicioCPU).count();
-```
-
-### Conclusión práctica
-La GPU normalmente es más rápida para arreglos grandes, porque:
-- cada hilo trabaja sobre un elemento distinto
-- se procesa en paralelo
-- la CPU recorre el conjunto secuencialmente
-
----
+No se afirma que la GPU sea más rápida antes de ejecutar la prueba. Para
+entradas pequeñas, el costo de transferencia puede superar el beneficio del
+paralelismo.
 
 ## Compilación y ejecución
-### Compilar todos los programas
+
+### Requisitos
+
+- WSL 2 o Linux;
+- `g++` con C++17;
+- CUDA Toolkit y `nvcc`;
+- GPU NVIDIA y controlador compatible.
+
+### Paso 1: verificar el entorno
+
+```bash
+bash scripts/verificar_entorno.sh
+```
+
+### Paso 2: ejecutar toda la entrega
+
 ```bash
 bash scripts/compilar.sh
 ```
 
-### Compilar un programa CUDA específico
+### Alternativa: ejecutar solo la comparación
+
 ```bash
-nvcc -std=c++17 -O2 source/parte1_suma_cuda.cu -o build/parte1_suma_cuda
-./build/parte1_suma_cuda
+mkdir -p build results
+nvcc -std=c++17 -O2 source/parte3_comparacion_cpu_gpu.cu \
+  -o build/parte3_comparacion_cpu_gpu
+./build/parte3_comparacion_cpu_gpu \
+  | tee results/parte3_comparacion_cpu_gpu.txt
 ```
 
-### Compilar la parte CPU
+Cuando termine, comparte `results/parte3_comparacion_cpu_gpu.txt` para
+incorporar los valores reales al informe. La
+[guía de validación](docs/VALIDACION.md) explica los criterios de aceptación.
+
+## Metodología de medición
+
+CPU y GPU procesan la misma operación, valores y tamaño. `cudaMalloc` queda
+fuera del tiempo extremo a extremo por ser preparación reutilizable; las
+transferencias sí se incluyen. También se informa el kernel por separado para
+distinguir cómputo de comunicación.
+
+Se realiza un calentamiento antes de medir el kernel, evitando que la creación
+del contexto CUDA distorsione el resultado. CPU y GPU se comparan contra
+`A[i] + B[i]`; el programa termina con error si encuentra discrepancias.
+
+## Evidencia visual
+
+| Parte | Captura | Verificación |
+|---|---|---|
+| 1 | [`parte-1.png`](report/imagenes/parte-1.png) | Secuencia `4..49` correcta |
+| 2 | [`parte-2.png`](report/imagenes/parte-2.png) | Cambio de 0 a 1 en 50 |
+| Plantilla | [`Archivo_vacío_Ejecución.png`](report/imagenes/Archivo_vacío_Ejecución.png) | `vacio.cu` completado |
+| CPU | [`parte-3.png`](report/imagenes/parte-3.png) | Línea base CPU histórica |
+
+La captura CPU se conserva como evidencia, pero debe complementarse con la
+salida nueva del comparador. Los tiempos no deben copiarse entre máquinas.
+
+## Informe
+
+- Fuente: [`report/informe_ht3.tex`](report/informe_ht3.tex)
+- PDF: [`output/pdf/informe_ht3.pdf`](output/pdf/informe_ht3.pdf)
+- Tema visual: **Tech Innovation**, con azul eléctrico, cian y alto contraste.
+
+Regeneración:
+
 ```bash
-g++ -std=c++17 -O2 source/parte3_cpu_vs_gpu.cpp -o build/parte3_cpu_vs_gpu
-./build/parte3_cpu_vs_gpu
+latexmk -pdf -interaction=nonstopmode \
+  -outdir=output/pdf report/informe_ht3.tex
 ```
-
----
-
-## Observaciones importantes
-- WSL debe tener CUDA instalado y funcionando
-- el driver de NVIDIA debe ser compatible con la versión del toolkit
-- una operación GPU necesita transferencia explícita de memoria
-- la configuración de `grid` y `block` influye directamente en la corrección y el rendimiento
-
----
 
 ## Conclusión
-Este laboratorio permitió observar de forma práctica cómo la arquitectura GPU transforma la ejecución de tareas intensivas en cómputo. La CPU sigue siendo importante para lógica general y control, pero la GPU resulta ideal cuando hay muchos cálculos independientes que pueden ejecutarse simultáneamente.
 
-La gestión correcta de memoria, la sincronización entre host y device y la elección adecuada de bloques y grids son esenciales para obtener resultados funcionales y eficientes. El trabajo demuestra no solo la capacidad de CUDA para paralelizar cálculos, sino también la importancia de comprender el flujo completo del programa para garantizar resultados correctos.
+El repositorio demuestra el flujo completo de CUDA: preparación en host,
+memoria explícita, lanzamiento del kernel, sincronización, retorno de resultados
+y validación. La comparación queda instrumentada para medir por separado
+cálculo y transferencias, permitiendo una interpretación honesta y reproducible.
